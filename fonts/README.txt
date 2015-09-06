@@ -6,8 +6,4 @@ I have heard of font authors launching frivolous lawsuits over breaking their li
 
 Also, in my experience, PHP GD only likes TTF fonts. If you want to use PostScript, OTF or WOFF, use FontForge or similar to convert it to TTF.
 
-Make sure you also add the font to FONTLIST.txt if you want to use it.
-
-I generate it with the following command:
-
-> FONTLIST.txt; for f in */*.ttf; do echo $f >> FONTLIST.txt; done
+Don't forget to add the font to your configuraton so that it's used.
