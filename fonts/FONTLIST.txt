@@ -1,0 +1,5 @@
+Cedarville_Cursive/Cedarville-Cursive.ttf
+Gochi_Hand/GochiHand-Regular.ttf
+Just_Another_Hand/JustAnotherHand.ttf
+Patrick_Hand/PatrickHand-Regular.ttf
+Patrick_Hand_SC/PatrickHandSC-Regular.ttf
