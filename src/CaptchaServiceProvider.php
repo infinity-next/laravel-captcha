@@ -39,11 +39,12 @@ class CaptchaServiceProvider extends ServiceProvider {
 		});
 		
 		$router->pattern('sha1', '[0-9a-f]{5,40}');
+		$router->pattern('alphanumeric', '[0-9a-z]{1,32}');
 		
 		/**
-		 * @param  string  $hash
-		 * @param  Captcha  $captcha
-		 * @return \Intervention\Image\ImageManager
+		 * Redirects the user to a default profile captcha.
+		 *
+		 * @return Response  A redirect
 		 */
 		$router->get(config('captcha.route'), function()
 		{
@@ -52,9 +53,43 @@ class CaptchaServiceProvider extends ServiceProvider {
 		});
 		
 		/**
-		 * @param  string  $hash
-		 * @param  Captcha  $captcha
+		 * Redirects the user to a specific profile captcha.
+		 *
+		 * @param  string  $profile
+		 * @return Response  A redirect
+		 */
+		$router->get(config('captcha.route'). '/{alphanumeric}', function($profile)
+		{
+			$captcha = Captcha::createCaptcha();
+			return redirect(config('captcha.route') . '/' . $profile . '/' . $captcha->getHash() . '.png');
+		});
+		
+		/**
+		 * Returns a JSON response with a new captcha hash.
+		 *
 		 * @return \Intervention\Image\ImageManager
+		 */
+		$router->get(config('captcha.route') . '.json', function()
+		{
+			return Captcha::createCaptcha();
+		});
+		
+		/**
+		 * Returns a JSON response with a new captcha hash.
+		 *
+		 * @param  string  $profile
+		 * @return response  Redirect
+		 */
+		$router->get(config('captcha.route') . '/{alphanumeric}.json', function($profile)
+		{
+			return Captcha::createCaptcha($profile);
+		});
+		
+		/**
+		 * Displays a default profile captcha.
+		 *
+		 * @param  string  $hash
+		 * @return Response  Image with headers
 		 */
 		$router->get(config('captcha.route') . '/{sha1}.png', function($sha1)
 		{
@@ -64,11 +99,13 @@ class CaptchaServiceProvider extends ServiceProvider {
 		});
 		
 		/**
-		 * @param  Captcha  $captcha
+		 * Displays a specific profile captcha.
+		 *
+		 * @param  string  $profile
 		 * @param  string  $config
-		 * @return \Intervention\Image\ImageManager
+		 * @return Response  Image with headers
 		 */
-		$router->get(config('captcha.route') . '/{config}/{sha1}.png', function($profile, $sha1)
+		$router->get(config('captcha.route') . '/{alphanumeric}/{sha1}.png', function($profile, $sha1)
 		{
 			$captcha = Captcha::findWithHex($sha1);
 			

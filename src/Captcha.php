@@ -27,6 +27,21 @@ class Captcha extends Model {
 	protected $fillable = ['hash', 'client_ip', 'solution', 'created_at', 'cracked_at'];
 	
 	/**
+	 * Attributes to be given in JSON responses for captchas.
+	 *
+	 * @var array
+	 */
+	protected $visible = ['hash_string', 'created_at'];
+	
+	/**
+	 * Pseudo-attributes to be given in JSON responses.
+	 *
+	 * @var array
+	 */
+	protected $appends = ['hash_string'];
+	 
+	
+	/**
 	 * Disables `created_at` and `updated_at` auto-management.
 	 *
 	 * @var boolean
@@ -76,6 +91,11 @@ class Captcha extends Model {
 		
 		if ($captcha instanceof static)
 		{
+			if ($captcha->isExpired())
+			{
+				return false;
+			}
+			
 			if ($captcha->checkAnswer($answer))
 			{
 				$captcha->cracked_at = $captcha->freshTimestamp();
@@ -102,10 +122,15 @@ class Captcha extends Model {
 	/**
 	 * Generate the captcha image.
 	 *
-	 * @return array  ['model' => Captcha, 'captcha' => base64 data, 'height' => int, 'width' => int]
+	 * @return Captcha
 	 */
 	public static function createCaptcha($profile = "default")
 	{
+		if (static::getProfile($profile) === false)
+		{
+			return abort(404);
+		}
+		
 		// Generate our answer from the charset and length config.
 		$solution = static::createSolution($profile);
 		
@@ -352,6 +377,11 @@ class Captcha extends Model {
 	 */
 	public function getAsResponse($profile = "default")
 	{
+		if (static::getProfile($profile) === false)
+		{
+			return abort(404);
+		}
+		
 		$cacheTime       = 24 * 60 * 60;
 		$responseImage   = $this->createGdCaptchaImage($profile);
 		$responseSize    = strlen($responseImage);
@@ -414,6 +444,16 @@ class Captcha extends Model {
 	}
 	
 	/**
+	 * Gets the time (in minutes) that a captcha will expire in.
+	 *
+	 * @return int  Expiry time in minutes
+	 */
+	protected static function getExpireTime()
+	{
+		return config("captcha.expires_in");
+	}
+	
+	/**
 	 * Get a random font.
 	 *
 	 * @return string  full path of a font file
@@ -465,6 +505,16 @@ class Captcha extends Model {
 	}
 	
 	/**
+	 * Returns the hash as a string by requesting $this->hash_string.
+	 *
+	 * @return string  sha1 as hex
+	 */
+	public function getHashStringAttribute()
+	{
+		return $this->getHash();
+	}
+	
+	/**
 	 * Returns our maximum image height.
 	 *
 	 * @return int  in pixels
@@ -495,6 +545,18 @@ class Captcha extends Model {
 	}
 	
 	/**
+	 * Returns the full profile configuration.
+	 *
+	 * @return array|boolean  False if not found.
+	 */
+	protected static function getProfile($profile)
+	{
+		$profile = config("captcha.profiles.{$profile}");
+		
+		return is_array($profile) ? $profile : false;
+	}
+	
+	/**
 	 * Returns if this profile has a sine wave.
 	 *
 	 * @return boolean
@@ -514,4 +576,14 @@ class Captcha extends Model {
 		return config("captcha.profiles.{$profile}.width");
 	}
 	
+	
+	/**
+	 * Determines if the captcha has expired.
+	 *
+	 * @return boolean
+	 */
+	public function isExpired()
+	{
+		return $this->created_at->addMinutes($this->getExpireTime())->isPast();
+	}
 }

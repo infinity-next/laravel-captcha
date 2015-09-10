@@ -7,7 +7,7 @@ return [
 	 * 
 	 * @var string  table_name
 	 */
-	'table'    => "captcha",
+	'table'      => "captcha",
 	
 	/**
 	 * Route hooked by the captcha service.
@@ -18,14 +18,23 @@ return [
 	 *
 	 * @var string  /route/to/captcha/
 	 */
-	'route'    => "captcha",
+	'route'      => "captcha",
+	
+	/**
+	 * Expiry time (in minutes) for a captcha.
+	 * It's imporatnt to have a short expiry time for your images.
+	 * If it's very long, it makes it easier for human captcha crackers to store answers.
+	 *
+	 * @var int  in minutes
+	 */
+	'expires_in' => 5,
 	
 	/**
 	 * Font file locations.
 	 *
 	 * @var array  of file paths relative to application base
 	 */
-	'fonts'    => [
+	'fonts'      => [
 		[
 			'file'   => 'vendor/infinity-next/brennan-captcha/fonts/Cedarville_Cursive/Cedarville-Cursive.ttf',
 			'stroke' => 3,
@@ -53,7 +62,7 @@ return [
 	 *
 	 * @var array  of arrays
 	 */
-	'profiles' => [
+	'profiles'   => [
 		
 		/**
 		 * The default captcha profile.
