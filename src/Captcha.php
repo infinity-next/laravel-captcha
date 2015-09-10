@@ -129,25 +129,30 @@ class Captcha extends Model {
 	 */
 	protected function createGdCaptchaImage($profile)
 	{
-		// Pull our solution.
+		// Find a font.
+		$font       = $this->getFontRandom();
+		
+		if (!isset($font['stroke']) || !is_numeric($font['stroke']) || $font['stroke'] <= 0)
+		{
+			$font['stroke'] = 3;
+		}
+		
+		// Get our solution.
 		$solution = $this->solution;
 		
-		// Select a font.
-		$font = $this->getFontRandom();
-		
-		// Split the solution into pieces randomly between 1-3 chars long.
+		// Split the solution into pieces between 1 and 3 characters long.
 		$answerArray = array();
-		
 		for ($i = 0; $i < strlen($solution); $i)
 		{
-			$n = rand(1,3);
+			$n = mt_rand(1,3);
 			
 			$answerArray[] = substr($solution, $i, $n);
 			
 			$i += $n;
 		}
 		
-		// We need to generate TTFBBOX for each of our substrings. This is the bounding box that the chosen font will take up and also the box within which we will draw our random dividng line.
+		// We need to generate TTFBBOX for each of our substrings.
+		// This is the bounding box that the chosen font will take up and also the box within which we will draw our mt_random dividng line.
 		$bboxArray   = array();
 		$totalWidth  = 0;
 		$totalHeight = 0;
@@ -155,48 +160,152 @@ class Captcha extends Model {
 		foreach ($answerArray as $i => $t)
 		{
 			// gd supports writing text at an arbitrary angle. Using this can confuse OCR programs.
-			$angle       = rand(-10,10);
-			$bbox        = imagettfbbox($this->getFontSize($profile), $angle, $font, $t);
-			$height      = abs($bbox[5] - $bbox[1]);
-			$width       = abs($bbox[4] - $bbox[0]);
-			$bboxArray[] = [
-				'bbox'   => $bbox,
-				'angle'  => $angle,
-				'text'   => $t,
-				'height' => $height,
-				'width'  => $width
-			];
+			$angle  = mt_rand(-10,10);
+			
+			$bbox   = imagettfbbox($this->getFontSize($profile), $angle, $this->getFontPath($font), $t);
+			$height = abs($bbox[5] - $bbox[1]);
+			$width  = abs($bbox[4] - $bbox[0]);
+			
+			// Spacing trick ruins some segmenters, add space mt_randomly to the right of some groups
+			$rpadding = mt_rand(0,35);
 			
 			// With our height and widths, we now have to determine the minimum necessary to make sure our letters never overflow the canvas.
-			$totalWidth += $width;
+			$totalWidth += ($width+$rpadding);
 			
 			if ($height > $totalHeight)
 			{
 				$totalHeight = $height;
 			}
+			
+			// Last letter should always have 10 px after it
+			if ($i === sizeof($answerArray)-1)
+			{
+				$rpadding += 10;
+			}
+			
+			$bboxArray[] = [
+				'bbox'     => $bbox,
+				'angle'    => $angle,
+				'text'     => $t,
+				'height'   => $height,
+				'width'    => $width,
+				'rpadding' => $rpadding
+			];
 		}
 		
 		// Set up the GD image canvas and etc. for writing our letters
-		$imgWidth  = max($this->getWidthMin($profile), $totalWidth);
-		$imgHeight = max($this->getHeightMin($profile), $totalHeight);
-		$img       = imagecreatetruecolor($imgWidth, $imgHeight);
-		$white     = imagecolorallocate($img, 255, 255, 255);
-		$black     = imagecolorallocate($img, 0, 0, 0);
-		imagefilledrectangle($img, 0, 0, $imgWidth-1, $imgHeight-1, $white);
-		imagesetthickness($img, 5);
+		$imgWidth    = max($this->getWidthMin($profile), $totalWidth) + 20; //+20 compensates for l/rpadding
+		$imgHeight   = max($this->getHeightMin($profile), $totalHeight);
+		$img         = imagecreatetruecolor($imgWidth, $imgHeight);
+		
+		$canvasColor = $this->getColorCanvas($profile);
+		$canvas      = imagecolorallocate($img, $canvasColor[0], $canvasColor[1], $canvasColor[2]);
+		$red         = imagecolorallocate($img, 255, 0, 0);
+		$green       = imagecolorallocate($img, 0, 128, 0);
+		$blue        = imagecolorallocate($img, 0, 0, 255);
+		$black       = imagecolorallocate($img, 0, 0, 0);
+		imagefilledrectangle($img, 0, 0, $imgWidth - 1, $imgHeight - 1, $canvas);
+		imagesetthickness($img, $font['stroke']);
 		
 		// Create images for each of our elements with IMGTTFTEXT.
-		$x0 = 0;
+		$x0 = 10;
 		
 		foreach ($bboxArray as $i => $bb)
 		{
-			imagettftext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeightMin($profile)/2, $black, $font, $bb['text']);
-			imageline($img, $x0, rand($this->getHeightMin($profile)*0.33, $this->getHeightMin($profile)*0.66), $x0+$bb['width'], rand($this->getHeightMin($profile)*0.33, $this->getHeightMin($profile)*0.66), $black);
-			$x0 += $bb['width'];
+			// Random color for different groups
+			$randomColor    = $this->getColorRandom($profile);
+			$mt_randomColor = imagecolorallocate($img, $randomColor[0], $randomColor[1], $randomColor[2]);
+			
+			imagettftext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeightMin($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
+			
+			$choice = mt_rand(1,10);
+			
+			// Generate strikethrough
+			if ($choice > 1 && $choice < 7)
+			{
+				imageline(
+					$img,
+					$x0,
+					mt_rand($this->getHeightMin($profile) * 0.33, $this->getHeightMin($profile) * 0.66),
+					$x0 + $bb['width'],
+					mt_rand($this->getHeightMin($profile) * 0.33, $this->getHeightMin($profile) * 0.66),
+					$mt_randomColor
+				);
+			}
+			// Generate circle/arc
+			else if ($choice >= 7)
+			{
+				$arcsize = mt_rand(50,80);
+				imagearc(
+					$img,
+					mt_rand($x0, $x0 + $bb['width']),
+					mt_rand(0, $this->getHeightMin($profile)),
+					$arcsize,
+					$arcsize,
+					0,
+					359.9, // GD has an issue with thickness and circles.
+					$mt_randomColor
+				);
+			}
+			
+			$x0 += ($bb['width'] + $bb['rpadding']);
 		}
 		
+		if ($this->getSine($profile))
+		{
+			$factor     = mt_rand(5,10);
+			$imgHeight += ($factor*2);
+			$imgsine    = imagecreatetruecolor($imgWidth, $imgHeight);
+			imagefilledrectangle($imgsine, 0, 0, $imgWidth - 1, $imgHeight - 1, $canvas);
+			
+			for ($x = 0; $x < imagesx($img); $x++)
+			{
+				for ($y = 0; $y < imagesy($img); $y++)
+				{
+					$rgba = imagecolorsforindex($img, imagecolorat($img, $x, $y));
+					$col  = imagecolorallocate($imgsine, $rgba["red"], $rgba["green"], $rgba["blue"]);
+					
+					$yloc = imagesy($imgsine) + ($factor / 2);
+					$distorted_y = ($y + round(( $factor*sin($x/20) ))) + $yloc % $yloc;
+					imagesetpixel($imgsine, $x, $distorted_y, $col);
+				}
+			}
+			
+			$img = $imgsine;
+		}
+		
+		
+		// Resize and crop
+		$finalWidth  = $this->getWidthMax($profile);
+		$finalHeight = $this->getHeightMax($profile);
+		
+		$srcWidth    = imagesx($img);
+		$srcHeight   = imagesy($img);
+		
+		$imgFinal    = imagecreatetruecolor($finalWidth, $finalHeight);
+		imagefilledrectangle($imgFinal, 0, 0, $finalWidth - 1, $finalHeight - 1, $canvas);
+		
+		// Try to match destination image by width
+		$newWidth    = $finalWidth;
+		$newHeight   = round($newWidth * ($srcHeight / $srcWidth));
+		$newX        = 0;
+		$newY        = round(($finalHeight - $newHeight) / 2);
+		
+		// If match by width failed and destination image does not fit, try by height 
+		if ($newHeight > $finalHeight)
+		{
+			$newHeight = $finalHeight;
+			$newWidth  = round($newHeight * ($srcWidth / $srcHeight));
+			$newX      = round(($finalWidth - $newWidth) / 2);
+			$newY      = 0;
+		}
+		
+		// Copy image on right place
+		imagecopyresampled($imgFinal, $img, $newX, $newY, 0, 0, $newWidth, $newHeight, $srcWidth, $srcHeight);
+		
+		
 		ob_start();
-		imagepng($img);
+		imagepng($imgFinal);
 		$imageData = ob_get_contents();
 		ob_end_clean();
 		
@@ -274,6 +383,37 @@ class Captcha extends Model {
 	}
 	
 	/**
+	 * Get a canvas color.
+	 *
+	 * @return string  full path of a font file
+	 */
+	protected static function getColorCanvas($profile)
+	{
+		return config("captcha.profiles.{$profile}.canvas");
+	}
+	
+	/**
+	 * Get a random color.
+	 *
+	 * @return array  of colors
+	 */
+	protected static function getColorRandom($profile)
+	{
+		$colors = static::getColors($profile);
+		return $colors[array_rand($colors)];
+	}
+	
+	/**
+	 * Get all of our fonts.
+	 *
+	 * @return array  of array of colors
+	 */
+	protected static function getColors($profile)
+	{
+		return config("captcha.profiles.{$profile}.colors");
+	}
+	
+	/**
 	 * Get a random font.
 	 *
 	 * @return string  full path of a font file
@@ -281,9 +421,7 @@ class Captcha extends Model {
 	protected static function getFontRandom()
 	{
 		$fonts = static::getFonts();
-		$font  = $fonts[array_rand($fonts)];
-		
-		return base_path() . "/" . $font;
+		return $fonts[array_rand($fonts)];
 	}
 	
 	/**
@@ -293,7 +431,17 @@ class Captcha extends Model {
 	 */
 	protected static function getFonts()
 	{
-		return config("captcha.font.files");
+		return config("captcha.fonts");
+	}
+	
+	/**
+	 * Returns the absolute path to a font's file.
+	 *
+	 * @return string
+	 */
+	protected static function getFontPath(array $font)
+	{
+		return base_path() . DIRECTORY_SEPARATOR . $font['file'];
 	}
 	
 	/**
@@ -314,6 +462,16 @@ class Captcha extends Model {
 	public function getHash()
 	{
 		return bin2hex($this->hash);
+	}
+	
+	/**
+	 * Returns our maximum image height.
+	 *
+	 * @return int  in pixels
+	 */
+	protected static function getHeightMax($profile)
+	{
+		return config("captcha.profiles.{$profile}.height_max");
 	}
 	
 	/**
@@ -344,6 +502,26 @@ class Captcha extends Model {
 	protected static function getLengthMin($profile)
 	{
 		return config("captcha.profiles.{$profile}.length_min");
+	}
+	
+	/**
+	 * Returns if this profile has a sine wave.
+	 *
+	 * @return boolean
+	 */
+	protected static function getSine($profile)
+	{
+		return !!config("captcha.profiles.{$profile}.sine");
+	}
+	
+	/**
+	 * Returns our maximum image width.
+	 *
+	 * @return int  in pixels
+	 */
+	protected static function getWidthMax($profile)
+	{
+		return config("captcha.profiles.{$profile}.width_max");
 	}
 	
 	/**
