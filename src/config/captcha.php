@@ -117,21 +117,21 @@ return [
 			 *
 			 * @var int
 			 */
-			'width'       => 200,
+			'width'       => 300,
 			
 			/**
 			 * Maximum image width.
 			 *
 			 * @var int
 			 */
-			'height'      => 80,
+			'height'      => 100,
 			
 			/**
 			 * Maximum font size in pixels.
 			 *
 			 * @var int
 			 */
-			'font_size'   => 20,
+			'font_size'   => 48,
 		],
 		
 	],
