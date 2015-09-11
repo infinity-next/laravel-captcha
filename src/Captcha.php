@@ -148,7 +148,7 @@ class Captcha extends Model {
 	/**
 	 * Creates a captcha image using the GD library.
 	 *
-	 * @author Frederick Brennan  @ctrlcctrlv
+	 * @author Fredrick Brennan  @ctrlcctrlv
 	 * @param  string  $profile
 	 * @return GdResource
 	 */
