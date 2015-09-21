@@ -91,7 +91,11 @@ class Captcha extends Model {
 		
 		if ($captcha instanceof static)
 		{
+<<<<<<< HEAD
 			if ($captcha->isCracked() || $captcha->isExpired())
+=======
+			if ($captcha->isExpired())
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 			{
 				return false;
 			}
@@ -230,18 +234,27 @@ class Captcha extends Model {
 		$blue        = imagecolorallocate($img, 0, 0, 255);
 		$black       = imagecolorallocate($img, 0, 0, 0);
 		imagefilledrectangle($img, 0, 0, $imgWidth - 1, $imgHeight - 1, $canvas);
+<<<<<<< HEAD
 		imageantialias($img, true);
+=======
+		imagesetthickness($img, $font['stroke']);
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 		
 		// Create images for each of our elements with IMGTTFTEXT.
 		$x0 = 10;
 		
+<<<<<<< HEAD
 		foreach ($bboxArray as $x => $bb)
+=======
+		foreach ($bboxArray as $i => $bb)
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 		{
 			// Random color for different groups
 			$randomColor    = $this->getColorRandom($profile);
 			$mt_randomColor = imagecolorallocate($img, $randomColor[0], $randomColor[1], $randomColor[2]);
 			
 			imagettftext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeight($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
+<<<<<<< HEAD
 			imagesetthickness($img, $this->getFontSize($profile) / mt_rand(10,14));
 			
 			// Add flourishes
@@ -282,6 +295,37 @@ class Captcha extends Model {
 						$mt_randomColor
 					);
 				}
+=======
+			
+			$choice = mt_rand(1,10);
+			
+			// Generate strikethrough
+			if ($choice > 1 && $choice < 7)
+			{
+				imageline(
+					$img,
+					$x0,
+					mt_rand($this->getHeight($profile) * 0.33, $this->getHeight($profile) * 0.66),
+					$x0 + $bb['width'],
+					mt_rand($this->getHeight($profile) * 0.33, $this->getHeight($profile) * 0.66),
+					$mt_randomColor
+				);
+			}
+			// Generate circle/arc
+			else if ($choice >= 7)
+			{
+				$arcsize = mt_rand(50,80);
+				imagearc(
+					$img,
+					mt_rand($x0, $x0 + $bb['width']),
+					mt_rand(0, $this->getHeight($profile)),
+					$arcsize,
+					$arcsize,
+					0,
+					359.9, // GD has an issue with thickness and circles.
+					$mt_randomColor
+				);
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 			}
 			
 			$x0 += ($bb['width'] + $bb['rpadding']);
@@ -480,6 +524,7 @@ class Captcha extends Model {
 	 *
 	 * @return array  of font file locations
 	 */
+<<<<<<< HEAD
 	protected static function getFonts($profile = false)
 	{
 		if ($profile !== false && config("captcha.profiles.{$profile}.fonts", false) !== false)
@@ -487,6 +532,10 @@ class Captcha extends Model {
 			return config("captcha.profiles.{$profile}.fonts");
 		}
 		
+=======
+	protected static function getFonts()
+	{
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 		return config("captcha.fonts");
 	}
 	
@@ -511,6 +560,7 @@ class Captcha extends Model {
 	}
 	
 	/**
+<<<<<<< HEAD
 	 * Get our maximum number of flourishes.
 	 *
 	 * @return int  maximum number of flourishes
@@ -521,6 +571,8 @@ class Captcha extends Model {
 	}
 	
 	/**
+=======
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 	 * Returns captcha id as a hex string.
 	 *
 	 * @return string  in hex
@@ -602,6 +654,7 @@ class Captcha extends Model {
 		return config("captcha.profiles.{$profile}.width");
 	}
 	
+<<<<<<< HEAD
 	/**
 	 * Determines if the captcha has already been solved.
 	 *
@@ -611,6 +664,8 @@ class Captcha extends Model {
 	{
 		return !is_null($this->cracked_at);
 	}
+=======
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 	
 	/**
 	 * Determines if the captcha has expired.

@@ -127,7 +127,11 @@ return [
 			 *
 			 * @var string  of individual characters
 			 */
+<<<<<<< HEAD
 			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ2345789',
+=======
+			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ1234567890',
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 			
 			/**
 			 * Valid colors for the character sets.
@@ -185,11 +189,15 @@ return [
 			
 			/**
 			 * Maximum font size in pixels.
+<<<<<<< HEAD
 			 * Also affects the size of flourishes.
+=======
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 			 *
 			 * @var int
 			 */
 			'font_size'   => 48,
+<<<<<<< HEAD
 			
 			/**
 			 * Maximum number of lines or circles to draw per letter blocking.
@@ -197,6 +205,8 @@ return [
 			 * @var int
 			 */
 			'flourishes'  => 2,
+=======
+>>>>>>> eaf3dad3165adc7d6668e10355d60340c7b1bd52
 		],
 		
 	],
