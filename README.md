@@ -9,8 +9,8 @@ The core features are:
 - Built in `capatcha` option for the Laravel validators.
 - `captcha()` helper for quickly popping in a new captcha.
 - Routing
-  - Includes configurable base route (`/captcha` can become `/assets/security-image`, for instance)
-  - Includes option for generating a brand new captcha (`captcha` will 302 to a new image)
+  - Includes configurable base route (`captcha` can instead be `assets/security-image`, for instance)
+  - Simple routes for generating a brand new captcha (`captcha` will 302 to a new image)
   - Accepts routing for profiles (`captcha/default` 302s to a new image using the `default` profile)
 - JSON API
   - Accessing any route with the `.json` suffix will return identifying information about your captcha. Helps with click-to-reload features.
