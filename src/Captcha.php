@@ -230,7 +230,11 @@ class Captcha extends Model {
 		$blue        = imagecolorallocate($img, 0, 0, 255);
 		$black       = imagecolorallocate($img, 0, 0, 0);
 		imagefilledrectangle($img, 0, 0, $imgWidth - 1, $imgHeight - 1, $canvas);
-		imageantialias($img, true);
+		
+		if (function_exists("imageantialias"))
+		{
+			imageantialias($img, false);
+		}
 		
 		// Create images for each of our elements with IMGTTFTEXT.
 		$x0 = 10;
@@ -252,7 +256,11 @@ class Captcha extends Model {
 				// Generate strikethrough
 				if ($choice > 1 && $choice < 7)
 				{
-					imageantialias($img, false);
+					if (function_exists("imageantialias"))
+					{
+						imageantialias($img, false);
+					}
+					
 					imageline(
 						$img,
 						$x0,
