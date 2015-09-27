@@ -269,7 +269,11 @@ class Captcha extends Model {
 						mt_rand($this->getHeight($profile) * 0.33, $this->getHeight($profile) * 0.66),
 						$mt_randomColor
 					);
-					imageantialias($img, true);
+					
+					if (function_exists("imageantialias"))
+					{
+						imageantialias($img, false);
+					}
 				}
 				// Generate circle/arc
 				else if ($choice >= 7)
