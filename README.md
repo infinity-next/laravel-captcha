@@ -13,7 +13,7 @@ The core features are:
   - Includes option for generating a brand new captcha (`captcha` will 302 to a new image)
   - Accepts routing for profiles (`captcha/default` 302s to a new image using the `default` profile)
 - JSON API
-  - Accessing any route with the `.json` suffix will return identifying information about your captcha so that it will
+  - Accessing any route with the `.json` suffix will return identifying information about your captcha. Helps with click-to-reload features.
 - Configurable global settings.
   - Fonts and their outline stroke width.
   - Captcha expiry time.
