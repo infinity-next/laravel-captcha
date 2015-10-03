@@ -60,7 +60,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		 */
 		$router->get(config('captcha.route'). '/{alphanumeric}', function($profile)
 		{
-			$captcha = Captcha::createCaptcha();
+			$captcha = Captcha::createCaptcha($profile);
 			return redirect(config('captcha.route') . '/' . $profile . '/' . $captcha->getHash() . '.png');
 		});
 		
