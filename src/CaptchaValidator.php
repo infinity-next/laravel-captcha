@@ -6,6 +6,6 @@ class CaptchaValidator
 {
 	public function validateCaptcha($attribute, $value, $parameters)
 	{
-		return Captcha::answerCaptcha(Request::input('captcha-hash'), $value);
+		return Captcha::answerCaptcha(Request::input("{$attribute}_hash"), $value);
 	}
 }
