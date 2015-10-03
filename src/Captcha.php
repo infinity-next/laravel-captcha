@@ -116,7 +116,7 @@ class Captcha extends Model {
 	 */
 	public function checkAnswer($answer)
 	{
-		return strtolower($answer) === strtolower($this->solution);
+		return mb_strtolower($answer) === mb_strtolower($this->solution);
 	}
 	
 	/**
@@ -155,7 +155,7 @@ class Captcha extends Model {
 	protected function createGdCaptchaImage($profile)
 	{
 		// Find a font.
-		$font       = $this->getFontRandom();
+		$font       = $this->getFontRandom($profile);
 		
 		if (!isset($font['stroke']) || !is_numeric($font['stroke']) || $font['stroke'] <= 0)
 		{
@@ -167,11 +167,11 @@ class Captcha extends Model {
 		
 		// Split the solution into pieces between 1 and 3 characters long.
 		$answerArray = array();
-		for ($i = 0; $i < strlen($solution); $i)
+		for ($i = 0; $i < mb_strlen($solution); $i)
 		{
 			$n = mt_rand(1,3);
 			
-			$answerArray[] = substr($solution, $i, $n);
+			$answerArray[] = mb_substr($solution, $i, $n);
 			
 			$i += $n;
 		}
@@ -187,7 +187,7 @@ class Captcha extends Model {
 			// gd supports writing text at an arbitrary angle. Using this can confuse OCR programs.
 			$angle  = mt_rand(-10,10);
 			
-			$bbox   = imagettfbbox($this->getFontSize($profile), $angle, $this->getFontPath($font), $t);
+			$bbox   = imageftbbox($this->getFontSize($profile), $angle, $this->getFontPath($font), $t);
 			$height = abs($bbox[5] - $bbox[1]);
 			$width  = abs($bbox[4] - $bbox[0]);
 			
@@ -236,7 +236,7 @@ class Captcha extends Model {
 			imageantialias($img, false);
 		}
 		
-		// Create images for each of our elements with IMGTTFTEXT.
+		// Create images for each of our elements with imagefttext.
 		$x0 = 10;
 		
 		foreach ($bboxArray as $x => $bb)
@@ -245,11 +245,11 @@ class Captcha extends Model {
 			$randomColor    = $this->getColorRandom($profile);
 			$mt_randomColor = imagecolorallocate($img, $randomColor[0], $randomColor[1], $randomColor[2]);
 			
-			imagettftext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeight($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
+			imagefttext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeight($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
 			imagesetthickness($img, $this->getFontSize($profile) / mt_rand(10,14));
 			
 			// Add flourishes
-			for ($y = mt_rand(0,$this->getFlourishes($profile)); $y < 2; ++$y)
+			for ($y = mt_rand(0,$this->getFlourishes($profile)); $y < $this->getFlourishes($profile); ++$y)
 			{
 				$choice = mt_rand(1,10);
 				
@@ -362,7 +362,24 @@ class Captcha extends Model {
 	
 	protected static function createSolution($profile)
 	{
-		return substr(str_shuffle(static::getCharset($profile)), 0, rand(static::getLengthMin($profile), static::getLengthMax($profile)));
+		mb_regex_encoding('UTF-8');
+		mb_internal_encoding('UTF-8');
+		
+		$charSet   = static::getCharset($profile);
+		$setLength = mb_strlen($charSet);
+		$minLength = static::getLengthMin($profile);
+		$maxLength = static::getLengthMax($profile);
+		
+		$solLength = rand($minLength, $maxLength);
+		$solString = "";
+		
+		for ($i = 0; $i < $solLength; ++$i)
+		{
+			$pos = rand(0, $setLength);
+			$solString .= mb_substr($charSet, $pos, 1);
+		}
+		
+		return $solString;
 	}
 	
 	/**
@@ -388,7 +405,7 @@ class Captcha extends Model {
 		
 		$html  = "";
 		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" />";
-		$html .= "<input type=\"hidden\" name=\"captcha-hash\" value=\"{$captcha->getHash()}\" />";
+		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$captcha->getHash()}\" />";
 		return $html;
 	}
 	
@@ -481,9 +498,9 @@ class Captcha extends Model {
 	 *
 	 * @return string  full path of a font file
 	 */
-	protected static function getFontRandom()
+	protected static function getFontRandom($profile = false)
 	{
-		$fonts = static::getFonts();
+		$fonts = static::getFonts($profile);
 		return $fonts[array_rand($fonts)];
 	}
 	
