@@ -127,7 +127,7 @@ return [
 			 *
 			 * @var string  of individual characters
 			 */
-			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ2345789',
+			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ',
 			
 			/**
 			 * Valid colors for the character sets.
@@ -199,5 +199,112 @@ return [
 			'flourishes'  => 2,
 		],
 		
+		/**
+		 * The dark captcha profile.
+		 *
+		 * @var array  of settings
+		 */
+		'dark' => [
+			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ',
+			
+			'colors'      => [
+				[255, 0,   0  ],
+				[0,   128, 0  ],
+				[0,   0,   255],
+			],
+			
+			'canvas'      => [15,15,15],
+			
+			'length_min'  => 6,
+			
+			'length_max'  => 8,
+			
+			'sine'        => true,
+			
+			'width'       => 560,
+			
+			'height'      => 160,
+			
+			'font_size'   => 96,
+			
+			'flourishes'  => 2,
+		],
+		
+		/**
+		 * A captcha utilizing the Japanese alphabet and common Kanji (Chinese) characters.
+		 * 
+		 * @var array  of settings
+		 */
+		'japanese' => [
+			'fonts'      => [
+				[
+					'file' => 'vendor/infinity-next/brennan-captcha/fonts/ipaexm/ipaexm.ttf',
+					'stroke' => 3,
+				],
+			],
+			
+			'charset'    => '日一大年中会人本月長国出上十生子分東三行同今高金時手見市力米自前円合立内二事社者地京間田体学下目五後' . // Common Kanji
+			                'あいうえおきくけこぎぐげごしiすせそじずぜぞちiつuてとぢづでどにぬねのひふへほびぶべぼぴぷぺぽみむめもゆよりるれろをん', // Japanese
+			
+			'colors'      => [
+				[255, 0,   0  ],
+				[0,   128, 0  ],
+				[0,   0,   255],
+			],
+			
+			'canvas'      => [255,255,255],
+			
+			'length_min'  => 3,
+			
+			'length_max'  => 4,
+			
+			'sine'        => true,
+			
+			'width'       => 560,
+			
+			'height'      => 160,
+			
+			'font_size'   => 96,
+			
+			'flourishes'  => 0,
+		],
+		
+		/**
+		 * This character set does not utilize any Japanese characters. It instead uses additional Chinese characters.
+		 * 
+		 * @var array  of settings
+		 */
+		'chinese' => [
+			'fonts'      => [
+				[
+					'file' => 'vendor/infinity-next/brennan-captcha/fonts/ipaexm/ipaexm.ttf',
+					'stroke' => 3,
+				],
+			],
+			
+			'charset'    => '日一大年中会人本月長国出上十生子分東三行同今高金時手見市力米自前円合立内二事社者地京間田体学下目五後';
+			
+			'colors'      => [
+				[255, 0,   0  ],
+				[0,   128, 0  ],
+				[0,   0,   255],
+			],
+			
+			'canvas'      => [255,255,255],
+			
+			'length_min'  => 4,
+			
+			'length_max'  => 5,
+			
+			'sine'        => true,
+			
+			'width'       => 560,
+			
+			'height'      => 160,
+			
+			'font_size'   => 96,
+			
+			'flourishes'  => 0,
+		],
 	],
 ];
