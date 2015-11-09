@@ -1,6 +1,7 @@
 <?php namespace InfinityNext\BrennanCaptcha;
 
 use Illuminate\Database\Eloquent\Model;
+use DB;
 use Request;
 
 class Captcha extends Model {
@@ -134,12 +135,17 @@ class Captcha extends Model {
 		// Generate our answer from the charset and length config.
 		$solution = static::createSolution($profile);
 		
+		// Returns an IP for insertion.
+		// Corrects PostgreSQL issues.
+		$ip = static::escapeBinary(inet_pton(Request::ip()));
+		
+		
 		$captcha = new static([
-			'client_ip' => inet_pton(Request::ip()),
+			'client_ip' => $ip,
 			'solution'  => $solution,
 		]);
 		
-		$captcha->hash = hex2bin( sha1(config('app.key') . "-" . Request::ip() . "-" . $solution . "-" . $captcha->freshTimestamp()) );
+		$captcha->hash = static::escapeBinary(hex2bin( sha1(config('app.key') . "-" . Request::ip() . "-" . $solution . "-" . $captcha->freshTimestamp()) ));
 		$captcha->save();
 		
 		return $captcha;
@@ -383,6 +389,43 @@ class Captcha extends Model {
 	}
 	
 	/**
+	 * Handles binary data for database connections.
+	 *
+	 * @param  binary  $bin
+	 * @return binary
+	 */
+	private static function escapeBinary($bin)
+	{
+		if (DB::connection() instanceof \Illuminate\Database\PostgresConnection)
+		{
+			$bin = pg_escape_bytea($bin);
+		}
+		
+		return $bin;
+	}
+	
+	/**
+	 * Handles binary data for database connections.
+	 *
+	 * @param  binary  $bin
+	 * @return binary
+	 */
+	private static function unescapeBinary($bin)
+	{
+		if (is_resource($bin))
+		{
+			$bin = stream_get_contents($bin);
+		}
+		
+		if (DB::connection() instanceof \Illuminate\Database\PostgresConnection)
+		{
+			$bin = pg_unescape_bytea($bin);
+		}
+		
+		return $bin;
+	}
+	
+	/**
 	 * Passes SHA1 hex as binary to find model.
 	 *
 	 * @param  string  $hex
@@ -390,7 +433,8 @@ class Captcha extends Model {
 	 */
 	public static function findWithHex($hex)
 	{
-		return static::where(['hash' => hex2bin($hex)])->first();
+		$hash = static::escapeBinary(hex2bin($hex));
+		return static::where(['hash' => $hash])->first();
 	}
 	
 	/**
@@ -556,7 +600,7 @@ class Captcha extends Model {
 	 */
 	public function getHash()
 	{
-		return bin2hex($this->hash);
+		return bin2hex(static::unescapeBinary($this->hash));
 	}
 	
 	/**
