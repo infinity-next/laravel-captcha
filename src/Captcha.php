@@ -1,6 +1,8 @@
 <?php namespace InfinityNext\BrennanCaptcha;
 
 use Illuminate\Database\Eloquent\Model;
+
+use Cache;
 use DB;
 use Request;
 
@@ -149,6 +151,27 @@ class Captcha extends Model {
 		$captcha->save();
 		
 		return $captcha;
+	}
+	
+	/**
+	 * Generate the captcha image.
+	 *
+	 * @return Captcha
+	 */
+	public static function createCaptchaImage($profile = "default", $recreate = false)
+	{
+		$rememberTimer   = 5;
+		$rememberKey     = "infinity-next.brennan-captcha.captcha.{$this->getHash())}";
+		$rememberClosure = function() use ($profile) {
+			$this->createGdCaptchaImage($profile:
+		};
+		
+		if ($recreate)
+		{
+			return Cache::put($rememberKey, $rememberClosure, $rememberTimer);
+		}
+		
+		return Cache::remember($rememberKey, $rememberTimer, $rememberClosure);
 	}
 	
 	/**
@@ -467,7 +490,7 @@ class Captcha extends Model {
 		}
 		
 		$cacheTime       = 24 * 60 * 60;
-		$responseImage   = $this->createGdCaptchaImage($profile);
+		$responseImage   = $this->createCaptchaImage($profile);
 		$responseSize    = strlen($responseImage);
 		$responseHeaders = [
 			'Cache-Control'       => "public, max-age={$cacheTime}, pre-check={$cacheTime}",
@@ -694,4 +717,5 @@ class Captcha extends Model {
 	{
 		return $this->created_at->addMinutes($this->getExpireTime())->isPast();
 	}
+	
 }
