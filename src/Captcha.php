@@ -1,5 +1,6 @@
 <?php namespace InfinityNext\BrennanCaptcha;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 use Cache;
@@ -27,7 +28,7 @@ class Captcha extends Model {
 	 *
 	 * @var array
 	 */
-	protected $fillable = ['hash', 'client_ip', 'solution', 'created_at', 'cracked_at'];
+	protected $fillable = ['hash', 'client_ip', 'solution', 'profile', 'created_at', 'cracked_at'];
 	
 	/**
 	 * Attributes to be given in JSON responses for captchas.
@@ -59,6 +60,11 @@ class Captcha extends Model {
 	protected $dates = ['created_at', 'cracked_at'];
 	
 	
+	/**
+	 * Dynamically binds table and binds events.
+	 *
+	 * @return void
+	 */
 	public function __construct()
 	{
 		// Make sure our table is correct.
@@ -86,7 +92,7 @@ class Captcha extends Model {
 	 *
 	 * @param  string  $hash
 	 * @param  string  $answer
-	 * @return boolean  If token was spent.
+	 * @return boolean|null  Boolean if token was spent, NULL if no captcha found.
 	 */
 	public static function answerCaptcha($hash, $answer)
 	{
@@ -108,7 +114,7 @@ class Captcha extends Model {
 			}
 		}
 		
-		return false;
+		return null;
 	}
 	
 	/**
@@ -125,6 +131,7 @@ class Captcha extends Model {
 	/**
 	 * Generate the captcha image.
 	 *
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
 	 * @return Captcha
 	 */
 	public static function createCaptcha($profile = "default")
@@ -145,6 +152,7 @@ class Captcha extends Model {
 		$captcha = new static([
 			'client_ip' => $ip,
 			'solution'  => $solution,
+			'profile'   => $profile,
 		]);
 		
 		$captcha->hash = static::escapeBinary(hex2bin( sha1(config('app.key') . "-" . Request::ip() . "-" . $solution . "-" . $captcha->freshTimestamp()) ));
@@ -156,19 +164,20 @@ class Captcha extends Model {
 	/**
 	 * Generate the captcha image.
 	 *
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
 	 * @return Captcha
 	 */
-	public static function createCaptchaImage($profile = "default", $recreate = false)
+	protected function createCaptchaImage($profile = "default", $recreate = false)
 	{
 		$rememberTimer   = 5;
-		$rememberKey     = "infinity-next.brennan-captcha.captcha.{$this->getHash())}";
+		$rememberKey     = "brennan-captcha.captcha.{$this->getHash()}";
 		$rememberClosure = function() use ($profile) {
-			$this->createGdCaptchaImage($profile:
+			return $this->createGdCaptchaImage($profile);
 		};
 		
 		if ($recreate)
 		{
-			return Cache::put($rememberKey, $rememberClosure, $rememberTimer);
+			Cache::forget($rememberKey);
 		}
 		
 		return Cache::remember($rememberKey, $rememberTimer, $rememberClosure);
@@ -178,7 +187,7 @@ class Captcha extends Model {
 	 * Creates a captcha image using the GD library.
 	 *
 	 * @author Fredrick Brennan  @ctrlcctrlv
-	 * @param  string  $profile
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
 	 * @return GdResource
 	 */
 	protected function createGdCaptchaImage($profile)
@@ -389,6 +398,13 @@ class Captcha extends Model {
 		return $imageData;
 	}
 	
+	/**
+	 * Generates a UTF-8 solution respecting multibyte characters.
+	 *
+	 * @static
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
+	 * @return string
+	 */
 	protected static function createSolution($profile)
 	{
 		mb_regex_encoding('UTF-8');
@@ -428,29 +444,55 @@ class Captcha extends Model {
 	}
 	
 	/**
-	 * Handles binary data for database connections.
+	 * Finds an existing captcha for the requesting client or generates a new one.
 	 *
-	 * @param  binary  $bin
-	 * @return binary
+	 * @static
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
+	 * @return Captcha
 	 */
-	private static function unescapeBinary($bin)
+	public static function findOrCreateCaptcha($profile = "default")
 	{
-		if (is_resource($bin))
+		$captcha = static::findWithIP();
+		
+		if ($captcha instanceof static)
 		{
-			$bin = stream_get_contents($bin);
+			return $captcha;
 		}
 		
-		if (DB::connection() instanceof \Illuminate\Database\PostgresConnection)
+		return static::createCaptcha($profile);
+	}
+	
+	/**
+	 * Finds the last good captcha with this IP.
+	 *
+	 * @static
+	 * @param  binary|null  $ip  Optional. IP to search with. Defaults to client IP if NULL.
+	 * @return Captcha
+	 */
+	public static function findWithIP($ip = null)
+	{
+		if (is_null($ip))
 		{
-			$bin = pg_unescape_bytea($bin);
+			$ip = static::escapeBinary(inet_pton(Request::ip()));
 		}
 		
-		return $bin;
+		$captcha = static::whereValid()
+			->where('client_ip', $ip)
+			->orderBy('created_at', 'desc')
+			->first();
+		
+		if ($captcha && $captcha->exists)
+		{
+			return $captcha;
+		}
+		
+		return false;
 	}
 	
 	/**
 	 * Passes SHA1 hex as binary to find model.
 	 *
+	 * @static
 	 * @param  string  $hex
 	 * @return Captcha
 	 */
@@ -463,7 +505,7 @@ class Captcha extends Model {
 	/**
 	 * Returns the captcha as form HTML.
 	 *
-	 * @param  string  $profile
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
 	 * @return string  html
 	 */
 	public function getAsHtml($profile = "default")
@@ -716,6 +758,72 @@ class Captcha extends Model {
 	public function isExpired()
 	{
 		return $this->created_at->addMinutes($this->getExpireTime())->isPast();
+	}
+	
+	/**
+	 * Destroys a captcha with that hash and replaces it.
+	 *
+	 * @static
+	 * @param  string  Optional. SHA1 hash. Checks latest if not specified.
+	 * @return static
+	 */
+	public static function replace($hash = null)
+	{
+		if (!$hash)
+		{
+			$captcha = static::findWithIP();
+		}
+		else
+		{
+			$captcha = static::findWithHex($hash);
+		}
+		
+		if ($captcha && $captcha->exists)
+		{
+			$waitTime = max($captcha->created_at->addSeconds(2)->timestamp - Carbon::now()->timestamp, 0);
+			sleep($waitTime);
+			
+			$profile = $captcha->profile;
+			$captcha->forceDelete();
+			
+			return static::createCaptcha($profile);
+		}
+		
+		return static::createCaptcha();
+	}
+	
+	/**
+	 * Refines query to only contain "good" captchas.
+	 *
+	 * @return Builder
+	 */
+	public function scopeWhereValid($query)
+	{
+		return $query->where(function($query) {
+			$query->whereNull('cracked_at');
+			$query->where('created_at', '>=', Carbon::now()->subMinutes(static::getExpireTime()));
+		});
+	}
+	
+	/**
+	 * Handles binary data for database connections.
+	 *
+	 * @param  binary  $bin
+	 * @return binary
+	 */
+	private static function unescapeBinary($bin)
+	{
+		if (is_resource($bin))
+		{
+			$bin = stream_get_contents($bin);
+		}
+		
+		if (DB::connection() instanceof \Illuminate\Database\PostgresConnection)
+		{
+			$bin = pg_unescape_bytea($bin);
+		}
+		
+		return $bin;
 	}
 	
 }

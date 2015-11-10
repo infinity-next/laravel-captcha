@@ -18,6 +18,7 @@ class AddBrennanCaptchaTable extends Migration
 			$table->binary('captcha_id');
 			$table->binary('client_ip');
 			$table->string('solution', 64);
+			$table->string('profile', 64)->default("default");
 			$table->timestamp('created_at');
 			$table->timestamp('cracked_at')->nullable()->default(NULL);
 			

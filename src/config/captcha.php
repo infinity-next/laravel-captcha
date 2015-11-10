@@ -107,6 +107,7 @@ return [
 	
 	/**
 	 * Captcha image profiles.
+	 * RESERVED WORDS: replace
 	 *
 	 * @var array  of arrays
 	 */

@@ -5,8 +5,9 @@ use InfinityNext\BrennanCaptcha\CaptchaTableCommand;
 use InfinityNext\BrennanCaptcha\CaptchaValidator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Factory;
-
 use Illuminate\Routing\Router;
+
+use Request;
 
 class CaptchaServiceProvider extends ServiceProvider {
 	
@@ -42,13 +43,34 @@ class CaptchaServiceProvider extends ServiceProvider {
 		$router->pattern('alphanumeric', '[0-9a-z]{1,32}');
 		
 		/**
+		 * Destroys an existing captcha and returns a new one.
+		 *
+		 * @return Response  A redirect
+		 */
+		$router->get(config('captcha.route'). '/replace', function()
+		{
+			$captcha = Captcha::replace(Request::get('hash', null));
+			return redirect(config('captcha.route') . '/' . $captcha->profile . '/' . $captcha->getHash() . '.png');
+		});
+		
+		/**
+		 * Destroys an existing captcha and returns a new one using JSON.
+		 *
+		 * @return \Intervention\Image\ImageManager
+		 */
+		$router->get(config('captcha.route') . '/replace.json', function()
+		{
+			return Captcha::replace(Request::get('hash', null));
+		});
+		
+		/**
 		 * Redirects the user to a default profile captcha.
 		 *
 		 * @return Response  A redirect
 		 */
 		$router->get(config('captcha.route'), function()
 		{
-			$captcha = Captcha::createCaptcha();
+			$captcha = Captcha::findOrCreateCaptcha();
 			return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.png');
 		});
 		
@@ -60,7 +82,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		 */
 		$router->get(config('captcha.route'). '/{alphanumeric}', function($profile)
 		{
-			$captcha = Captcha::createCaptcha($profile);
+			$captcha = Captcha::findOrCreateCaptcha($profile);
 			return redirect(config('captcha.route') . '/' . $profile . '/' . $captcha->getHash() . '.png');
 		});
 		
@@ -71,7 +93,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		 */
 		$router->get(config('captcha.route') . '.json', function()
 		{
-			return Captcha::createCaptcha();
+			return Captcha::findOrCreateCaptcha();
 		});
 		
 		/**
@@ -82,7 +104,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		 */
 		$router->get(config('captcha.route') . '/{alphanumeric}.json', function($profile)
 		{
-			return Captcha::createCaptcha($profile);
+			return Captcha::findOrCreateCaptcha($profile);
 		});
 		
 		/**
