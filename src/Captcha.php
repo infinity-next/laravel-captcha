@@ -274,20 +274,34 @@ class Captcha extends Model {
 			imageantialias($img, false);
 		}
 		
+		$flourishes    = 0;
+		$flourishesMin = $this->getFlourishesMin($profile); // Min per captcha
+		$flourishesMax = $this->getFlourishesMax($profile); // Max per letter blocking
+		
 		// Create images for each of our elements with imagefttext.
 		$x0 = 10;
-		
 		foreach ($bboxArray as $x => $bb)
 		{
 			// Random color for different groups
 			$randomColor    = $this->getColorRandom($profile);
 			$mt_randomColor = imagecolorallocate($img, $randomColor[0], $randomColor[1], $randomColor[2]);
+			$fontSize       = $this->getFontSize($profile);
+			$mt_randomSize  = mt_rand( $fontSize * 0.8, $fontSize * 1);
 			
-			imagefttext($img, $this->getFontSize($profile), $bb['angle'], $x0, $this->getHeight($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
-			imagesetthickness($img, $this->getFontSize($profile) / mt_rand(10,14));
+			imagefttext($img, $mt_randomSize, $bb['angle'], $x0, $this->getHeight($profile) * 0.75, $mt_randomColor, $this->getFontPath($font), $bb['text']);
+			imagesetthickness($img, $mt_randomSize / mt_rand(8,12));
 			
 			// Add flourishes
-			for ($y = mt_rand(0,$this->getFlourishes($profile)); $y < $this->getFlourishes($profile); ++$y)
+			// Get our change of having one.
+			$y = mt_rand(0, $flourishesMax);
+			
+			// If we have too few and this is our last chance, heap it on.
+			if ($flourishes < $flourishesMin && $x == count($bboxArray))
+			{
+				$y = $flourishesMin - $flourishes;
+			}
+			
+			for ($y = $y; $y < $flourishesMax; ++$y)
 			{
 				$choice = mt_rand(1,10);
 				
@@ -302,9 +316,9 @@ class Captcha extends Model {
 					imageline(
 						$img,
 						$x0,
-						mt_rand($this->getHeight($profile) * 0.33, $this->getHeight($profile) * 0.66),
+						mt_rand($this->getHeight($profile) * 0.44, $this->getHeight($profile) * 0.55),
 						$x0 + $bb['width'],
-						mt_rand($this->getHeight($profile) * 0.33, $this->getHeight($profile) * 0.66),
+						mt_rand($this->getHeight($profile) * 0.44, $this->getHeight($profile) * 0.55),
 						$mt_randomColor
 					);
 					
@@ -653,9 +667,19 @@ class Captcha extends Model {
 	 *
 	 * @return int  maximum number of flourishes
 	 */
-	protected static function getFlourishes($profile)
+	protected static function getFlourishesMax($profile)
 	{
-		return config("captcha.profiles.{$profile}.flourishes");
+		return config("captcha.profiles.{$profile}.flourishes_max");
+	}
+	
+	/**
+	 * Get our minimum number of flourishes.
+	 *
+	 * @return int  maximum number of flourishes
+	 */
+	protected static function getFlourishesMin($profile)
+	{
+		return config("captcha.profiles.{$profile}.flourishes_min");
 	}
 	
 	/**

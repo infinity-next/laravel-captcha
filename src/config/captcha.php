@@ -107,7 +107,6 @@ return [
 	
 	/**
 	 * Captcha image profiles.
-	 * RESERVED WORDS: replace
 	 *
 	 * @var array  of arrays
 	 */
@@ -193,11 +192,18 @@ return [
 			'font_size'   => 48,
 			
 			/**
+			 * Minimum number of lines or circles to draw per ENTIRE CAPTCHA.
+			 *
+			 * @var int
+			 */
+			'flourishes_min' => 1,
+			
+			/**
 			 * Maximum number of lines or circles to draw per letter blocking.
 			 *
 			 * @var int
 			 */
-			'flourishes'  => 2,
+			'flourishes_max' => 2,
 		],
 		
 		/**
