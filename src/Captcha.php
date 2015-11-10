@@ -1,3 +1,4 @@
+		 * @return Response  A redirect
 <?php namespace InfinityNext\BrennanCaptcha;
 
 use Carbon\Carbon;
@@ -805,12 +806,18 @@ class Captcha extends Model {
 		if ($captcha && $captcha->exists)
 		{
 			$waitTime = max($captcha->created_at->addSeconds(2)->timestamp - Carbon::now()->timestamp, 0);
-			sleep($waitTime);
 			
-			$profile = $captcha->profile;
-			$captcha->forceDelete();
-			
-			return static::createCaptcha($profile);
+			if (!$waitTime)
+			{
+				$profile = $captcha->profile;
+				$captcha->forceDelete();
+				
+				return static::createCaptcha($profile);
+			}
+			else
+			{
+				abort(429);
+			}
 		}
 		
 		return static::createCaptcha();
