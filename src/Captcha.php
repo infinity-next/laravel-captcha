@@ -1,4 +1,3 @@
-		 * @return Response  A redirect
 <?php namespace InfinityNext\BrennanCaptcha;
 
 use Carbon\Carbon;
