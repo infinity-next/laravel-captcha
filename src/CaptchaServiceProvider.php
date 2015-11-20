@@ -50,6 +50,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		$router->get(config('captcha.route'). '/replace', function()
 		{
 			$captcha = Captcha::replace(Request::get('hash', null));
+			
 			return redirect(config('captcha.route') . '/' . $captcha->profile . '/' . $captcha->getHash() . '.png');
 		});
 		
@@ -71,6 +72,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		$router->get(config('captcha.route'), function()
 		{
 			$captcha = Captcha::findOrCreateCaptcha();
+			
 			return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.png');
 		});
 		
@@ -83,6 +85,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 		$router->get(config('captcha.route'). '/{alphanumeric}', function($profile)
 		{
 			$captcha = Captcha::findOrCreateCaptcha($profile);
+			
 			return redirect(config('captcha.route') . '/' . $profile . '/' . $captcha->getHash() . '.png');
 		});
 		
@@ -117,7 +120,12 @@ class CaptchaServiceProvider extends ServiceProvider {
 		{
 			$captcha = Captcha::findWithHex($sha1);
 			
-			return $captcha->getAsResponse();
+			if ($captcha instanceof Captcha)
+			{
+				return $captcha->getAsResponse();
+			}
+			
+			return abort(404);
 		});
 		
 		/**
@@ -131,7 +139,13 @@ class CaptchaServiceProvider extends ServiceProvider {
 		{
 			$captcha = Captcha::findWithHex($sha1);
 			
-			return $captcha->getAsResponse($profile);
+			
+			if ($captcha instanceof Captcha)
+			{
+				return $captcha->getAsResponse();
+			}
+			
+			return abort(404);
 		});
 	}
 	
