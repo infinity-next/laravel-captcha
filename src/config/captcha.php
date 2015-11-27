@@ -168,6 +168,12 @@ return [
 			 */
 			'sine'        => true,
 			
+			/**
+			 * Whether the profile is for right-to-left script.
+			 *
+			 * @var boolean
+			 */
+			'rtl'         => false,
 			
 			/**
 			 * Captcha image width.
@@ -228,6 +234,8 @@ return [
 			
 			'sine'        => true,
 			
+			'rtl'         => false,
+			
 			'width'       => 560,
 			
 			'height'      => 160,
@@ -267,6 +275,8 @@ return [
 			
 			'sine'        => true,
 			
+			'rtl'         => false,
+			
 			'width'       => 560,
 			
 			'height'      => 160,
@@ -304,6 +314,48 @@ return [
 			'length_max'  => 5,
 			
 			'sine'        => true,
+			
+			'rtl'         => false,
+			
+			'width'       => 560,
+			
+			'height'      => 160,
+			
+			'font_size'   => 96,
+			
+			'flourishes'  => 0,
+		],
+		
+                /**
+		 * A captcha utilizing the Arabic alphabet.
+		 * 
+		 * @var array  of settings
+		 */
+		'arabic' => [
+			'fonts'      => [
+				[
+					'file' => 'vendor/infinity-next/brennan-captcha/fonts/SIL/Lateef/LateefRegOT.ttf',
+					'stroke' => 3,
+				],
+			],
+			
+			'charset'    => 'بتثجحخدذرزسشصضطظعغفقكلمني',
+			
+			'colors'      => [
+				[255, 0,   0  ],
+				[0,   128, 0  ],
+				[0,   0,   255],
+			],
+			
+			'canvas'      => [255,255,255],
+			
+			'length_min'  => 4,
+			
+			'length_max'  => 5,
+			
+			'sine'        => true,
+			
+			'rtl'         => true,
 			
 			'width'       => 560,
 			

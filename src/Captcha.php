@@ -202,6 +202,12 @@ class Captcha extends Model {
 		
 		// Get our solution.
 		$solution = $this->solution;
+
+		// Reverse the solution if the profile is for right-to-left script.
+		if ($this->isRTL($profile))
+		{
+			$solution = $this->mb_strrev($solution);
+		}
 		
 		// Split the solution into pieces between 1 and 3 characters long.
 		$answerArray = array();
@@ -439,6 +445,26 @@ class Captcha extends Model {
 		}
 		
 		return $solString;
+	}
+
+	/**
+	 * Reverses a string, respecting multibyte characters.
+	 *
+	 * @static
+	 * @param  string  $string
+	 * @return string
+	 */
+	private static function mb_strrev($string)
+	{
+		$length   = mb_strlen($string);
+		$reversed = "";
+
+		while ($length-- > 0)
+		{
+			$reversed .= mb_substr($string, $length, 1);
+		}
+
+		return $reversed;
 	}
 	
 	/**
@@ -762,6 +788,16 @@ class Captcha extends Model {
 	protected static function getWidth($profile)
 	{
 		return config("captcha.profiles.{$profile}.width");
+	}
+
+	/**
+	 * Returns if this profile is right-to-left.
+	 *
+	 * @return boolean
+	 */
+	protected static function isRTL($profile)
+	{
+		return !!config("captcha.profiles.{$profile}.rtl");
 	}
 	
 	/**
