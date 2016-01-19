@@ -139,7 +139,6 @@ class CaptchaServiceProvider extends ServiceProvider {
 		{
 			$captcha = Captcha::findWithHex($sha1);
 			
-			
 			if ($captcha instanceof Captcha)
 			{
 				return $captcha->getAsResponse();

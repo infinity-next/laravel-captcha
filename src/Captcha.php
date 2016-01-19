@@ -146,7 +146,7 @@ class Captcha extends Model {
 		
 		// Returns an IP for insertion.
 		// Corrects PostgreSQL issues.
-		$ip = static::escapeBinary(inet_pton(Request::ip()));
+		$ip = static::escapeInet();
 		
 		
 		$captcha = new static([
@@ -454,7 +454,7 @@ class Captcha extends Model {
 	 * @param  string  $string
 	 * @return string
 	 */
-	private static function mb_strrev($string)
+	protected static function mb_strrev($string)
 	{
 		$length   = mb_strlen($string);
 		$reversed = "";
@@ -473,14 +473,36 @@ class Captcha extends Model {
 	 * @param  binary  $bin
 	 * @return binary
 	 */
-	private static function escapeBinary($bin)
+	protected static function escapeBinary($bin)
 	{
-		if (DB::connection() instanceof \Illuminate\Database\PostgresConnection)
+		if (config('captcha.escapeBinary', true) && DB::connection() instanceof \Illuminate\Database\PostgresConnection)
 		{
 			$bin = pg_escape_bytea($bin);
 		}
 		
 		return $bin;
+	}
+	
+	
+	/**
+	 * Handles IP addresses for database connections.
+	 *
+	 * @param  binary  $bin
+	 * @return binary
+	 */
+	protected static function escapeInet($inet = null)
+	{
+		if (is_null($inet))
+		{
+			$inet = Request::ip();
+		}
+		
+		if (config('captcha.escapeInet', true))
+		{
+			return static::escapeBinary(inet_pton($inet));
+		}
+		
+		return $inet;
 	}
 	
 	/**
@@ -511,10 +533,7 @@ class Captcha extends Model {
 	 */
 	public static function findWithIP($ip = null)
 	{
-		if (is_null($ip))
-		{
-			$ip = static::escapeBinary(inet_pton(Request::ip()));
-		}
+		$ip = static::escapeInet($ip);
 		
 		$captcha = static::whereValid()
 			->where('client_ip', $ip)
@@ -550,11 +569,14 @@ class Captcha extends Model {
 	 */
 	public function getAsHtml($profile = "default")
 	{
-		$captcha = $this->createCaptcha();
+		if (!$this->exists)
+		{
+			$this->createCaptcha();
+		}
 		
 		$html  = "";
-		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" />";
-		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$captcha->getHash()}\" />";
+		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$this->getHash()}.png") . "\" class=\"captcha\" />";
+		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$this->getHash()}\" />";
 		return $html;
 	}
 	
@@ -584,9 +606,7 @@ class Captcha extends Model {
 			'Filename'            => "{$this->getHash()}.png",
 		];
 		
-		$response = \Response::stream(function() use ($responseImage) {
-			echo $responseImage;
-		}, 200, $responseHeaders);
+		$response = \Response::make($responseImage, 200, $responseHeaders);
 		
 		return $response;
 	}
@@ -877,7 +897,7 @@ class Captcha extends Model {
 	 * @param  binary  $bin
 	 * @return binary
 	 */
-	private static function unescapeBinary($bin)
+	protected static function unescapeBinary($bin)
 	{
 		if (is_resource($bin))
 		{
