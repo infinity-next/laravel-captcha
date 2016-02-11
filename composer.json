@@ -1,22 +1,30 @@
 {
     "name": "infinity-next/laravel-captcha",
+<<<<<<< HEAD
     "description": "An anti-bot image captcha system written by Frederick Brennan and ported to Laravel for Infinity Next by Joshua Moon.",
+=======
+    "description": "An anti-bot image captcha system written for Laravel.",
+>>>>>>> 605789889fba6dddb4d987ae3fba6cbb828fe4eb
     "type": "library",
-    "license": "AGPL3",
+    "license": "AGPL-3.0+",
     "authors": [
         {
             "name": "Joshua Moon",
-            "email": "josh@jaw.sh"
+            "email": "josh@jaw.sh",
+            "homepage": "http://jaw.sh",
+            "role": "Maintainer"
         },
         {
             "name": "Frederick Brennan",
-            "email": "admin@8chan.co"
+            "email": "admin@8chan.co",
+            "homepage": "http://8ch.net",
+            "role": "Algorithm Concept Author"
         }
     ],
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "InfinityNext\\BrennanCaptcha\\": "src/"
+            "InfinityNext\\LaravelCaptcha\\": "src/"
         }
     },
     "require": {
