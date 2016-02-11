@@ -6,13 +6,13 @@
     "authors": [
         {
             "name": "Joshua Moon",
-            "email": "josh@jaw.sh"
+            "email": "josh@jaw.sh",
             "homepage": "http://jaw.sh",
             "role": "Maintainer"
         },
         {
             "name": "Frederick Brennan",
-            "email": "admin@8chan.co".
+            "email": "admin@8chan.co",
             "homepage": "http://8ch.net",
             "role": "Algorithm Concept Author"
         }
