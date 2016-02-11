@@ -1,4 +1,4 @@
-<?php namespace InfinityNext\BrennanCaptcha;
+<?php namespace InfinityNext\LaravelCaptcha;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -170,7 +170,7 @@ class Captcha extends Model {
 	protected function createCaptchaImage($profile = "default", $recreate = false)
 	{
 		$rememberTimer   = 5;
-		$rememberKey     = "brennan-captcha.captcha.{$this->getHash()}";
+		$rememberKey     = "laravel-captcha.captcha.{$this->getHash()}";
 		$rememberClosure = function() use ($profile) {
 			return $this->createGdCaptchaImage($profile);
 		};
@@ -446,7 +446,41 @@ class Captcha extends Model {
 		
 		return $solString;
 	}
-
+	
+	/**
+	 * Create a collection of models from plain arrays.
+	 *
+	 * @static
+	 * @param  array  $items
+	 * @param  string|null  $connection
+	 * @return \Illuminate\Database\Eloquent\Collection
+	 */
+	public static function hydrate(array $items, $connection = null)
+	{
+		$instance = (new static)->setConnection($connection);
+		
+		$items = array_map(function ($item) use ($instance) {
+			// This loop unwraps content from stream resource objects.
+			// PostgreSQL will return binary data as a stream, which does not
+			// cache correctly. Doing this allows proper attribute mutation and
+			// type casting without any headache or checking which database
+			// system we are using before doing business logic.
+			// 
+			// See: https://github.com/laravel/framework/issues/10847
+			foreach ($item as $column => $datum)
+			{
+				if (is_resource($datum))
+				{
+					$item->{$column} = stream_get_contents($datum);
+				}
+			}
+			
+			return $instance->newFromBuilder($item);
+		}, $items);
+		
+		return $instance->newCollection($items);
+	}
+	
 	/**
 	 * Reverses a string, respecting multibyte characters.
 	 *
@@ -569,9 +603,9 @@ class Captcha extends Model {
 	 */
 	public function getAsHtml($profile = "default")
 	{
-		if (!$this->exists)
+		if (!$this->exists || !$this->getHash())
 		{
-			$this->createCaptcha();
+			$this->createCaptcha($profile);
 		}
 		
 		$html  = "";

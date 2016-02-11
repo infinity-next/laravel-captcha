@@ -1,4 +1,4 @@
-<?php namespace InfinityNext\BrennanCaptcha;
+<?php namespace InfinityNext\LaravelCaptcha;
 
 use Request;
 

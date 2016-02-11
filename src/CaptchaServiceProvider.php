@@ -1,8 +1,8 @@
-<?php namespace InfinityNext\BrennanCaptcha;
+<?php namespace InfinityNext\LaravelCaptcha;
 
-use InfinityNext\BrennanCaptcha\Captcha;
-use InfinityNext\BrennanCaptcha\CaptchaTableCommand;
-use InfinityNext\BrennanCaptcha\CaptchaValidator;
+use InfinityNext\LaravelCaptcha\Captcha;
+use InfinityNext\LaravelCaptcha\CaptchaTableCommand;
+use InfinityNext\LaravelCaptcha\CaptchaValidator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Factory;
 use Illuminate\Routing\Router;
@@ -169,7 +169,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 	 */
 	protected function registerValidationRules($validator)
 	{
-		$validator->extend('captcha', 'InfinityNext\BrennanCaptcha\CaptchaValidator@validateCaptcha', 'validation.captcha');
+		$validator->extend('captcha', 'InfinityNext\LaravelCaptcha\CaptchaValidator@validateCaptcha', 'validation.captcha');
 	}
 	
 }

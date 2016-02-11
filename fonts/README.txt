@@ -12,7 +12,7 @@ I generate it with the following script:
 
 #!/bin/bash
 > FONTLIST.txt;
-PREPEND=vendor/infinity-next/brennan-captcha/fonts/;
+PREPEND=vendor/infinity-next/laravel-captcha/fonts/;
 printf "\t'fonts'\t=>\t[\n"
 for f in */*.ttf; do
 	printf "\t\t[\n\t\t\t'file' => '$PREPEND$f',\n\t\t\t'stroke' => 3,\n\t\t],\n" >> FONTLIST.txt; 

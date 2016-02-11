@@ -1,5 +1,5 @@
 {
-    "name": "infinity-next/brennan-captcha",
+    "name": "infinity-next/laravel-captcha",
     "description": "An anti-bot image captcha system written by Frederick Brennan and ported to Laravel for Infinity Next by Joshua Moon.",
     "type": "library",
     "license": "AGPL3",
