@@ -2,7 +2,7 @@
     "name": "infinity-next/laravel-captcha",
     "description": "An anti-bot image captcha system written for Laravel.",
     "type": "library",
-    "license": "AGPL3",
+    "license": "AGPL-3.0+",
     "authors": [
         {
             "name": "Joshua Moon",
