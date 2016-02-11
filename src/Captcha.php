@@ -605,12 +605,16 @@ class Captcha extends Model {
 	{
 		if (!$this->exists || !$this->getHash())
 		{
-			$this->createCaptcha($profile);
+			$captcha = $this->createCaptcha($profile);
+		}
+		else
+		{
+			$captcha = $this;
 		}
 		
 		$html  = "";
-		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$this->getHash()}.png") . "\" class=\"captcha\" />";
-		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$this->getHash()}\" />";
+		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" />";
+		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$captcha->getHash()}\" />";
 		return $html;
 	}
 	
