@@ -10,18 +10,18 @@ use Request;
 class Captcha extends Model {
 	
 	/**
-	 * The database table used by the model.
+	 * Pseudo-attributes to be given in JSON responses.
 	 *
-	 * @var string
+	 * @var array
 	 */
-	protected $table;
+	protected $appends = ['hash_string'];
 	
 	/**
-	 * The primary key that is used by ::get()
+	 * Attributes which are automatically sent through a Carbon instance on load.
 	 *
-	 * @var string
+	 * @var array
 	 */
-	protected $primaryKey = 'captcha_id';
+	protected $dates = ['created_at', 'cracked_at'];
 	
 	/**
 	 * The attributes that are mass assignable.
@@ -31,19 +31,26 @@ class Captcha extends Model {
 	protected $fillable = ['hash', 'client_ip', 'solution', 'profile', 'created_at', 'cracked_at'];
 	
 	/**
-	 * Attributes to be given in JSON responses for captchas.
+	 * Captcha models cached by their hex value.
 	 *
+	 * @static
 	 * @var array
 	 */
-	protected $visible = ['hash_string', 'created_at'];
+	protected static $modelSingletons = [];
 	
 	/**
-	 * Pseudo-attributes to be given in JSON responses.
+	 * The primary key that is used by ::get()
 	 *
-	 * @var array
+	 * @var string
 	 */
-	protected $appends = ['hash_string'];
-	 
+	protected $primaryKey = 'captcha_id';
+	
+	/**
+	 * The database table used by the model.
+	 *
+	 * @var string
+	 */
+	protected $table;
 	
 	/**
 	 * Disables `created_at` and `updated_at` auto-management.
@@ -53,11 +60,18 @@ class Captcha extends Model {
 	public $timestamps = false;
 	
 	/**
-	 * Attributes which are automatically sent through a Carbon instance on load.
+	 * A flag to be set if this model has passed validation during this request.
+	 *
+	 * @var bool
+	 */
+	protected $validated_this_request = false;
+	
+	/**
+	 * Attributes to be given in JSON responses for captchas.
 	 *
 	 * @var array
 	 */
-	protected $dates = ['created_at', 'cracked_at'];
+	protected $visible = ['hash_string', 'created_at'];
 	
 	
 	/**
@@ -100,6 +114,11 @@ class Captcha extends Model {
 		
 		if ($captcha instanceof static)
 		{
+			if ($captcha->validated_this_request)
+			{
+				return true;
+			}
+			
 			if ($captcha->isCracked() || $captcha->isExpired())
 			{
 				return false;
@@ -108,6 +127,7 @@ class Captcha extends Model {
 			if ($captcha->checkAnswer($answer))
 			{
 				$captcha->cracked_at = $captcha->freshTimestamp();
+				$captcha->validated_this_request = true;
 				$captcha->save();
 				
 				return true;
@@ -592,7 +612,20 @@ class Captcha extends Model {
 	public static function findWithHex($hex)
 	{
 		$hash = static::escapeBinary(hex2bin($hex));
-		return static::where(['hash' => $hash])->first();
+		
+		if (isset(static::$modelSingletons[$hash]))
+		{
+			return static::$modelSingletons[$hash];
+		}
+		
+		$model = static::where(['hash' => $hash])->first();
+		
+		if ($model)
+		{
+			static::$modelSingletons[$hash] = $model;
+		}
+		
+		return $model;
 	}
 	
 	/**
