@@ -15,15 +15,12 @@ class AddBrennanCaptchaTable extends Migration
 	{
 		Schema::create('captcha_table', function(Blueprint $table)
 		{
-			$table->binary('captcha_id');
+			$table->increments('captcha_id');
 			$table->binary('client_ip');
 			$table->string('solution', 64);
 			$table->string('profile', 64)->default("default");
 			$table->timestamp('created_at');
 			$table->timestamp('cracked_at')->nullable()->default(NULL);
-			
-			$table->primary('captcha_id');
-			$table->unique('captcha_id');
 		});
 	}
 	
