@@ -39,6 +39,8 @@ class CaptchaServiceProvider extends ServiceProvider {
 			return new Captcha();
 		});
 		
+		include(realpath(dirname(__FILE__)) . "/helpers/captcha.php");
+		
 		$router->pattern('sha1', '[0-9a-f]{5,40}');
 		$router->pattern('alphanumeric', '[0-9a-z]{1,32}');
 		
@@ -155,7 +157,7 @@ class CaptchaServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		$this->app->bindShared('command.captcha.table', function ($app) {
+		$this->app->singleton('command.captcha.table', function ($app) {
 			return new CaptchaTableCommand;
 		});
 		

@@ -212,8 +212,11 @@ class Captcha extends Model {
 	 */
 	protected function createGdCaptchaImage($profile)
 	{
+		// Clock generation start time for debugging.
+		$startTime = microtime(true);
+		
 		// Find a font.
-		$font       = $this->getFontRandom($profile);
+		$font = $this->getFontRandom($profile);
 		
 		if (!isset($font['stroke']) || !is_numeric($font['stroke']) || $font['stroke'] <= 0)
 		{
@@ -384,15 +387,18 @@ class Captcha extends Model {
 			$imgsine    = imagecreatetruecolor($imgWidth, $imgHeight);
 			imagefilledrectangle($imgsine, 0, 0, $imgWidth - 1, $imgHeight - 1, $canvas);
 			
-			for ($x = 0; $x < imagesx($img); $x++)
+			$imagesx = imagesx($img);
+			$imagesy = imagesy($img);
+			
+			for ($x = 0; $x < $imagesx; ++$x)
 			{
-				for ($y = 0; $y < imagesy($img); $y++)
+				for ($y = 0; $y < $imagesy; ++$y)
 				{
 					$rgba = imagecolorsforindex($img, imagecolorat($img, $x, $y));
 					$col  = imagecolorallocate($imgsine, $rgba["red"], $rgba["green"], $rgba["blue"]);
 					
 					$yloc = imagesy($imgsine) + ($factor / 2);
-					$distorted_y = ($y + round(( $factor*sin($x/20) ))) + $yloc % $yloc;
+					$distorted_y = ($y + round(( $factor * sin($x / 20) ))) + $yloc % $yloc;
 					imagesetpixel($imgsine, $x, $distorted_y, $col);
 				}
 			}

@@ -162,7 +162,11 @@ return [
 			'length_max'  => 8,
 			
 			/**
-			 * Applies a sine wave effect through the captcha.
+			 * Applies a sine wave fx through the captcha.
+			 *
+			 * WARNING: A sine is very effective at busting bots,
+			 * but it is also costly to produce. Do not use with
+			 * a high resolution captcha image.
 			 *
 			 * @var boolean
 			 */
