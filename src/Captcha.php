@@ -177,7 +177,14 @@ class Captcha extends Model {
 			'profile'           => $profile,
 		]);
 
-		$captcha->hash = static::escapeBinary(hex2bin( sha1(config('app.key') . "-" . Request::ip() . "-" . $solution . "-" . $captcha->freshTimestamp()) ));
+		$captcha->hash = static::escapeBinary(hex2bin(sha1(implode("-", [
+			config('app.key'),
+			Request::ip(),
+			Session::getId(),
+			$solution,
+			$captcha->freshTimestamp()
+		]))));
+
 		$captcha->save();
 
 		return $captcha;
@@ -703,12 +710,12 @@ class Captcha extends Model {
 			return abort(404);
 		}
 
-		$cacheTime       = 24 * 60 * 60;
 		$responseImage   = $this->createCaptchaImage($profile);
 		$responseSize    = strlen($responseImage);
 		$responseHeaders = [
-			'Cache-Control'       => "public, max-age={$cacheTime}, pre-check={$cacheTime}",
-			'Expires'             => gmdate(DATE_RFC1123, time() + $cacheTime),
+			'Cache-Control'       => "no-cache, no-store, must-revalidate",
+			'Pragma'              => "no-cache",
+			'Expires'             => 0,
 			'Last-Modified'       => gmdate(DATE_RFC1123, $this->created_at->timestamp),
 			'Content-Disposition' => "inline",
 			'Content-Length'      => $responseSize,
