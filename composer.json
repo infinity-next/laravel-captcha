@@ -1,0 +1,30 @@
+{
+    "name": "infinity-next/laravel-captcha",
+    "description": "An anti-bot image captcha system written for Laravel.",
+    "type": "library",
+    "license": "AGPL-3.0+",
+    "authors": [
+        {
+            "name": "Joshua Moon",
+            "email": "josh@jaw.sh",
+            "homepage": "http://jaw.sh",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Frederick Brennan",
+            "email": "admin@8chan.co",
+            "homepage": "http://8ch.net",
+            "role": "Algorithm Concept Author"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "InfinityNext\\LaravelCaptcha\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.4.0",
+        "ext-gd": "*"
+    }
+}
