@@ -664,7 +664,11 @@ class Captcha extends Model {
 			return static::$modelSingletons[$hash];
 		}
 
-		$model = static::where('client_session_id', $hash)->first();
+		$model = static::whereValid()
+			->where('client_session_id', $hash)
+			->orderBy('created_at', 'desc')
+			->first();
+
 
 		if ($model)
 		{
