@@ -22,14 +22,48 @@ class Captcha extends Model {
 	 *
 	 * @var array
 	 */
-	protected $dates = ['created_at', 'cracked_at'];
+	protected $dates = [
+		'created_at',
+		'cracked_at',
+		'expires_at',
+	];
+
+	/**
+	 * The attributes that should be casted to native types.
+	 *
+	 * @var array
+	 */
+	protected $casts = [
+		'solution' => 'string',
+		'profile' => 'string',
+		'created_at' => 'datetime',
+		'cracked_at' => 'datetime',
+		'expires_at' => 'datetime',
+	];
 
 	/**
 	 * The attributes that are mass assignable.
 	 *
 	 * @var array
 	 */
-	protected $fillable = ['hash', 'client_ip', 'client_session_id', 'solution', 'profile', 'created_at', 'cracked_at'];
+	protected $fillable = [
+		'hash',
+		'client_ip',
+		'client_session_id',
+		'solution',
+		'profile',
+		'created_at',
+		'cracked_at',
+	];
+
+	/**
+	 * Attributes which do not exist but should be appended to the JSON output.
+	 *
+	 * @var array
+	 */
+	protected $appends = [
+		'expires_at',
+	];
 
 	/**
 	 * Captcha models cached by their hex value.
@@ -72,7 +106,10 @@ class Captcha extends Model {
 	 *
 	 * @var array
 	 */
-	protected $visible = ['hash_string', 'created_at'];
+	protected $visible = [
+		'hash_string',
+		'created_at'
+	];
 
 
 	/**
@@ -784,6 +821,16 @@ class Captcha extends Model {
 	}
 
 	/**
+	 * Appends an expiry time
+	 *
+	 * @return int  Expiry time in minutes
+	 */
+	protected static function getExpiresAtAttribute()
+	{
+		return $this->created_at->addMinutes((int) $this->getExpireTime);
+	}
+
+	/**
 	 * Get a random font.
 	 *
 	 * @return string  full path of a font file
@@ -1010,6 +1057,18 @@ class Captcha extends Model {
 			$query->whereNull('cracked_at');
 			$query->where('created_at', '>=', Carbon::now()->subMinutes(static::getExpireTime()));
 		});
+	}
+
+	/**
+	 * Prepare a date for array / JSON serialization.
+	 *
+	 * @param  \DateTime  $date
+	 *
+	 * @return string
+	 */
+	protected function serializeDate(DateTime $date)
+	{
+		return $date->timestamp;
 	}
 
 	/**
