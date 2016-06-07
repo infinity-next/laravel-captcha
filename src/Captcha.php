@@ -4,19 +4,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 use Cache;
+use DateTime;
+use DateTimeInterface;
 use DB;
 use Request;
 use Session;
 
-class Captcha extends Model {
-
-	/**
-	 * Pseudo-attributes to be given in JSON responses.
-	 *
-	 * @var array
-	 */
-	protected $appends = ['hash_string'];
-
+class Captcha extends Model
+{
 	/**
 	 * Attributes which are automatically sent through a Carbon instance on load.
 	 *
@@ -62,6 +57,7 @@ class Captcha extends Model {
 	 * @var array
 	 */
 	protected $appends = [
+		'hash_string',
 		'expires_at',
 	];
 
@@ -108,7 +104,8 @@ class Captcha extends Model {
 	 */
 	protected $visible = [
 		'hash_string',
-		'created_at'
+		'created_at',
+		'expires_at',
 	];
 
 
@@ -706,7 +703,6 @@ class Captcha extends Model {
 			->orderBy('created_at', 'desc')
 			->first();
 
-
 		if ($model)
 		{
 			static::$modelSingletons[$hash] = $model;
@@ -823,11 +819,11 @@ class Captcha extends Model {
 	/**
 	 * Appends an expiry time
 	 *
-	 * @return int  Expiry time in minutes
+	 * @return string  sha1 as hex
 	 */
-	protected static function getExpiresAtAttribute()
+	public function getExpiresAtAttribute()
 	{
-		return $this->created_at->addMinutes((int) $this->getExpireTime);
+		return $this->created_at->addMinutes((int) $this->getExpireTime());
 	}
 
 	/**
