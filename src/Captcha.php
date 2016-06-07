@@ -823,7 +823,7 @@ class Captcha extends Model
 	 */
 	public function getExpiresAtAttribute()
 	{
-		return $this->created_at->addMinutes((int) $this->getExpireTime());
+		return $this->created_at->addMinutes((int) $this->getExpireTime())->timestamp;
 	}
 
 	/**
