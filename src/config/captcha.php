@@ -1,14 +1,14 @@
 <?php
 
 return [
-	
+
 	/**
 	 * The table utilized by the Brennan Captch model and migration.
-	 * 
+	 *
 	 * @var string  table_name
 	 */
 	'table'      => "captcha",
-	
+
 	/**
 	 * Route hooked by the captcha service.
 	 * If "captcha", image URL will be:
@@ -19,7 +19,15 @@ return [
 	 * @var string  /route/to/captcha/
 	 */
 	'route'      => "captcha",
-	
+
+	/**
+	 * Passed directly into the 'grou' parameter of the routing group used for
+	 * all API points.
+	 *
+	 * @var string|array  Middleware group name or array of middleware classes.
+	 */
+	'route'      => "api",
+
 	/**
 	 * Expiry time (in minutes) for a captcha.
 	 * It's imporatnt to have a short expiry time for your images.
@@ -28,7 +36,7 @@ return [
 	 * @var int  in minutes
 	 */
 	'expires_in' => 5,
-	
+
 	/**
 	 * Font file locations.
 	 *
@@ -104,14 +112,14 @@ return [
 			'stroke' => 3,
 		]
 	],
-	
+
 	/**
 	 * Captcha image profiles.
 	 *
 	 * @var array  of arrays
 	 */
 	'profiles'   => [
-		
+
 		/**
 		 * The default captcha profile.
 		 * All settings available to you are demonstrated here.
@@ -128,7 +136,7 @@ return [
 			 * @var string  of individual characters
 			 */
 			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ',
-			
+
 			/**
 			 * Valid colors for the character sets.
 			 *
@@ -139,28 +147,28 @@ return [
 				[0,   128, 0  ],
 				[0,   0,   255],
 			],
-			
+
 			/**
 			 * Color of the backdrop.
 			 *
 			 * @var array  R,G,B color
 			 */
 			'canvas'      => [255,255,255],
-			
+
 			/**
 			 * Minimum characters per captcha.
 			 *
 			 * @var int
 			 */
 			'length_min'  => 6,
-			
+
 			/**
 			 * Maximum characters per captcha.
 			 *
 			 * @var int
 			 */
 			'length_max'  => 8,
-			
+
 			/**
 			 * Applies a sine wave fx through the captcha.
 			 *
@@ -171,28 +179,28 @@ return [
 			 * @var boolean
 			 */
 			'sine'        => true,
-			
+
 			/**
 			 * Whether the profile is for right-to-left script.
 			 *
 			 * @var boolean
 			 */
 			'rtl'         => false,
-			
+
 			/**
 			 * Captcha image width.
 			 *
 			 * @var int
 			 */
 			'width'       => 300,
-			
+
 			/**
 			 * Maximum image width.
 			 *
 			 * @var int
 			 */
 			'height'      => 100,
-			
+
 			/**
 			 * Maximum font size in pixels.
 			 * Also affects the size of flourishes.
@@ -200,14 +208,14 @@ return [
 			 * @var int
 			 */
 			'font_size'   => 48,
-			
+
 			/**
 			 * Minimum number of lines or circles to draw per ENTIRE CAPTCHA.
 			 *
 			 * @var int
 			 */
 			'flourishes_min' => 1,
-			
+
 			/**
 			 * Maximum number of lines or circles to draw per letter blocking.
 			 *
@@ -215,7 +223,7 @@ return [
 			 */
 			'flourishes_max' => 2,
 		],
-		
+
 		/**
 		 * The dark captcha profile.
 		 *
@@ -223,35 +231,35 @@ return [
 		 */
 		'dark' => [
 			'charset'    => 'AaBbCcDdEeFGHhIJKkLMmNnOoPpQRrSsTtUuVvWwXxYyZ',
-			
+
 			'colors'      => [
 				[255, 0,   0  ],
 				[0,   128, 0  ],
 				[0,   0,   255],
 			],
-			
+
 			'canvas'      => [15,15,15],
-			
+
 			'length_min'  => 6,
-			
+
 			'length_max'  => 8,
-			
+
 			'sine'        => true,
-			
+
 			'rtl'         => false,
-			
+
 			'width'       => 560,
-			
+
 			'height'      => 160,
-			
+
 			'font_size'   => 96,
-			
+
 			'flourishes'  => 2,
 		],
-		
+
 		/**
 		 * A captcha utilizing the Japanese alphabet and common Kanji (Chinese) characters.
-		 * 
+		 *
 		 * @var array  of settings
 		 */
 		'japanese' => [
@@ -261,38 +269,38 @@ return [
 					'stroke' => 3,
 				],
 			],
-			
+
 			'charset'    => '日一大年中会人本月長国出上十生子分東三行同今高金時手見市力米自前円合立内二事社者地京間田体学下目五後' . // Common Kanji
 			                'あいうえおきくけこぎぐげごしiすせそじずぜぞちiつuてとぢづでどにぬねのひふへほびぶべぼぴぷぺぽみむめもゆよりるれろをん', // Japanese
-			
+
 			'colors'      => [
 				[255, 0,   0  ],
 				[0,   128, 0  ],
 				[0,   0,   255],
 			],
-			
+
 			'canvas'      => [255,255,255],
-			
+
 			'length_min'  => 3,
-			
+
 			'length_max'  => 4,
-			
+
 			'sine'        => true,
-			
+
 			'rtl'         => false,
-			
+
 			'width'       => 560,
-			
+
 			'height'      => 160,
-			
+
 			'font_size'   => 96,
-			
+
 			'flourishes'  => 0,
 		],
-		
+
 		/**
 		 * This character set does not utilize any Japanese characters. It instead uses additional Chinese characters.
-		 * 
+		 *
 		 * @var array  of settings
 		 */
 		'chinese' => [
@@ -302,37 +310,37 @@ return [
 					'stroke' => 3,
 				],
 			],
-			
+
 			'charset'    => '日一大年中会人本月長国出上十生子分東三行同今高金時手見市力米自前円合立内二事社者地京間田体学下目五後',
-			
+
 			'colors'      => [
 				[255, 0,   0  ],
 				[0,   128, 0  ],
 				[0,   0,   255],
 			],
-			
+
 			'canvas'      => [255,255,255],
-			
+
 			'length_min'  => 4,
-			
+
 			'length_max'  => 5,
-			
+
 			'sine'        => true,
-			
+
 			'rtl'         => false,
-			
+
 			'width'       => 560,
-			
+
 			'height'      => 160,
-			
+
 			'font_size'   => 96,
-			
+
 			'flourishes'  => 0,
 		],
-		
+
                 /**
 		 * A captcha utilizing the Arabic alphabet.
-		 * 
+		 *
 		 * @var array  of settings
 		 */
 		'arabic' => [
@@ -342,31 +350,31 @@ return [
 					'stroke' => 3,
 				],
 			],
-			
+
 			'charset'    => 'بتثجحخدذرزسشصضطظعغفقكلمني',
-			
+
 			'colors'      => [
 				[255, 0,   0  ],
 				[0,   128, 0  ],
 				[0,   0,   255],
 			],
-			
+
 			'canvas'      => [255,255,255],
-			
+
 			'length_min'  => 4,
-			
+
 			'length_max'  => 5,
-			
+
 			'sine'        => true,
-			
+
 			'rtl'         => true,
-			
+
 			'width'       => 560,
-			
+
 			'height'      => 160,
-			
+
 			'font_size'   => 96,
-			
+
 			'flourishes'  => 0,
 		],
 	],

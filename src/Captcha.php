@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Support\Htmlable;
 
 use Cache;
 use DateTime;
@@ -10,7 +11,7 @@ use DB;
 use Request;
 use Session;
 
-class Captcha extends Model
+class Captcha extends Model implements Htmlable
 {
 	/**
 	 * Attributes which are automatically sent through a Carbon instance on load.
@@ -729,7 +730,7 @@ class Captcha extends Model
 		}
 
 		$html  = "";
-		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" />";
+		$html .= "<img src=\"" . url(config('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" data-expires-at=\"".$this->expires_at."\" />";
 		$html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$captcha->getHash()}\" />";
 		return $html;
 	}
@@ -823,7 +824,14 @@ class Captcha extends Model
 	 */
 	public function getExpiresAtAttribute()
 	{
-		return $this->created_at->addMinutes((int) $this->getExpireTime())->timestamp;
+		$timestamp = $this->created_at;
+
+		if (!($timestamp instanceof Carbon))
+		{
+			$timestamp = $this->freshTimestamp();
+		}
+
+		return $timestamp->addMinutes((int) $this->getExpireTime())->timestamp;
 	}
 
 	/**
@@ -1065,6 +1073,17 @@ class Captcha extends Model
 	protected function serializeDate(DateTime $date)
 	{
 		return $date->timestamp;
+	}
+
+	/**
+	 * Returns the captcha as form HTML.
+	 *
+	 * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
+	 * @return string  html
+	 */
+	public function toHtml()
+	{
+		return $this->getAsHtml($this->profile);
 	}
 
 	/**
