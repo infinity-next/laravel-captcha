@@ -4,6 +4,7 @@ namespace InfinityNext\LaravelCaptcha;
 
 use Carbon\Carbon;
 use InfinityNext\LaravelCaptcha\Captcha as CaptchaModel;
+use Illuminate\Contracts\Support\Htmlable;
 use Cache;
 use Config;
 use InvalidArgumentException;
@@ -11,7 +12,7 @@ use OutOfRangeException;
 use Request;
 use Session;
 
-class CaptchaChallenge
+class CaptchaChallenge implements Htmlable
 {
     /**
      * Captcha hash.
@@ -673,5 +674,20 @@ class CaptchaChallenge
     public function restore()
     {
         return Cache::get("laravel-captcha.captcha.{$this->session}");
+    }
+
+    /**
+     * Returns the captcha as form HTML.
+     *
+     * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
+     * @return string  html
+     */
+    public function toHtml()
+    {
+        $html  = "";
+        $html .= "<img src=\"" . url(Config::get('captcha.route') . "/{$this->profile}/{$this->getHash()}.webp") . "\" class=\"captcha\" />";
+        $html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$this->getHash()}\" />";
+
+        return $html;
     }
 }

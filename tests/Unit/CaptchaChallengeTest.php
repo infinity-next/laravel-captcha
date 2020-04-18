@@ -79,4 +79,12 @@ class CaptchaChallengeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $newAnswer = new CaptchaAnswer($hash);
     }
+
+    public function testHtml()
+    {
+        $challenge = new CaptchaChallenge;
+        $html = $challenge->toHtml();
+
+        $this->assertTrue(strpos($html, $challenge->getHash() . ".webp") !== false);
+    }
 }

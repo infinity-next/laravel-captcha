@@ -5,7 +5,6 @@ namespace InfinityNext\LaravelCaptcha;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\PostgresConnection;
-use Illuminate\Contracts\Support\Htmlable;
 use Cache;
 use Config;
 use DateTimeInterface;
@@ -13,7 +12,7 @@ use DB;
 use Request;
 use Session;
 
-class Captcha extends Model implements Htmlable
+class Captcha extends Model
 {
     /**
      * Attributes which are automatically sent through a Carbon instance on load.
@@ -350,28 +349,6 @@ class Captcha extends Model implements Htmlable
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->timestamp;
-    }
-
-    /**
-     * Returns the captcha as form HTML.
-     *
-     * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
-     * @return string  html
-     */
-    public function toHtml($profile = "default")
-    {
-        if (!$this->exists || !$this->getHash()) {
-            $captcha = $this->createCaptcha($profile);
-        }
-        else {
-            $captcha = $this;
-        }
-
-        $html  = "";
-        $html .= "<img src=\"" . url(Config::get('captcha.route') . "/{$profile}/{$captcha->getHash()}.png") . "\" class=\"captcha\" />";
-        $html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$captcha->getHash()}\" />";
-
-        return $html;
     }
 
     /**
