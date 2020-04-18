@@ -149,7 +149,7 @@ class CaptchaAnswer
             $captcha = Cache::get("laravel-captcha.captcha.{$this->hash}");
 
             if (is_null($captcha)) {
-                throw new ModelNotFoundException;
+                throw new InvalidArgumentException;
             }
 
             $this->captcha = $captcha;
