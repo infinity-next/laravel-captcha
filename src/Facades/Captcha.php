@@ -1,4 +1,6 @@
-<?php namespace InfinityNext\LaravelCaptcha\Facades;
+<?php
+
+namespace InfinityNext\LaravelCaptcha\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
@@ -8,11 +10,10 @@ use Illuminate\Support\Facades\Facade;
  * @author Jaw-sh
  * @see InfinityNext\LaravelCaptcha\Captcha
  */
-class Captcha extends Facade {
-	
-	protected static function getFacadeAccessor()
-	{
-		return "Captcha";
-	}
-	
+class Captcha extends Facade
+{
+    protected static function getFacadeAccessor()
+    {
+        return "Captcha";
+    }
 }
