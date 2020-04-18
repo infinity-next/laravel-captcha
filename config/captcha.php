@@ -18,15 +18,15 @@ return [
      *
      * @var string  /route/to/captcha/
      */
-    'route'      => "captcha",
+    'path'        => "captcha",
 
     /**
-     * Passed directly into the 'grou' parameter of the routing group used for
+     * Passed directly into the 'middleware' parameter of the routing group used for
      * all API points.
      *
      * @var string|array  Middleware group name or array of middleware classes.
      */
-    'route'      => "api",
+    'middleware'  => "api",
 
     /**
      * Expiry time (in minutes) for a captcha.

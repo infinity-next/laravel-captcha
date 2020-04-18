@@ -6,6 +6,7 @@ use InfinityNext\LaravelCaptcha\Captcha as CaptchaModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Cache;
 use InvalidArgumentException;
+use Session;
 
 class CaptchaAnswer
 {
@@ -111,8 +112,9 @@ class CaptchaAnswer
      */
     public function forget()
     {
-        Cache::forget("laravel-captcha.captcha-image.{$this->hash}");
+        Cache::forget("laravel-captcha.session." . Session::getId());
         Cache::forget("laravel-captcha.captcha.{$this->hash}");
+        Cache::forget("laravel-captcha.captcha-image.{$this->hash}");
     }
 
     /**
@@ -137,6 +139,7 @@ class CaptchaAnswer
     public function setCaptcha($hash)
     {
         if ($hash instanceof Captcha) {
+            $this->hash = $hash;
             $this->captcha = $hash;
         }
         else {
@@ -146,12 +149,13 @@ class CaptchaAnswer
             //    throw new ModelNotFoundException;
             //}
 
-            $captcha = Cache::get("laravel-captcha.captcha.{$this->hash}");
+            $captcha = Cache::get("laravel-captcha.captcha.{$hash}");
 
             if (is_null($captcha)) {
                 throw new InvalidArgumentException;
             }
 
+            $this->hash = $hash;
             $this->captcha = $captcha;
         }
 

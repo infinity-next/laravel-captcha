@@ -2,36 +2,13 @@
 
 namespace InfinityNext\LaravelCaptcha\Tests\Unit;
 
-use InfinityNext\LaravelCaptcha\CaptchaAnswer;
 use InfinityNext\LaravelCaptcha\CaptchaChallenge;
 use InfinityNext\LaravelCaptcha\Tests\TestCase;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Cache;
 use InvalidArgumentException;
 
 class CaptchaChallengeTest extends TestCase
 {
-    public function testAnswer()
-    {
-        $challenge = new CaptchaChallenge;
-        $hash = $challenge->getHash();
-        $solution = $challenge->getSolution();
-
-        $answer = new CaptchaAnswer($hash);
-        $this->assertInstanceOf(CaptchaAnswer::class, $answer);
-        $this->assertTrue($answer->answer($solution));
-    }
-
-    public function testAnswerWrong()
-    {
-        $challenge = new CaptchaChallenge;
-        $hash = $challenge->getHash();
-        $solution = $challenge->getSolution();
-
-        $answer = new CaptchaAnswer($hash);
-        $this->assertFalse($answer->answer(rand(0, 1000)));
-    }
-
     public function testCreateHash()
     {
         $challenge = new CaptchaChallenge;
@@ -68,23 +45,23 @@ class CaptchaChallengeTest extends TestCase
         unlink(stream_get_meta_data($tmp)['uri']);
     }
 
-    public function testForget()
-    {
-        $challenge = new CaptchaChallenge;
-        $hash = $challenge->getHash();
-
-        $answer = new CaptchaAnswer($hash);
-        $answer->forget();
-
-        $this->expectException(InvalidArgumentException::class);
-        $newAnswer = new CaptchaAnswer($hash);
-    }
-
     public function testHtml()
     {
         $challenge = new CaptchaChallenge;
         $html = $challenge->toHtml();
 
         $this->assertTrue(strpos($html, $challenge->getHash() . ".webp") !== false);
+    }
+
+    public function testReplace()
+    {
+        $challenge = new CaptchaChallenge;
+        $hash1 = $challenge->getHash();
+        $this->assertSame(strlen($hash1), 64);
+
+        $challenge->replace();
+        $hash2 = $challenge->getHash();
+        $this->assertSame(strlen($hash2), 64);
+        $this->assertNotSame($hash1, $hash2);
     }
 }

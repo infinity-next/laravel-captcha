@@ -10,6 +10,7 @@ use Config;
 use InvalidArgumentException;
 use OutOfRangeException;
 use Request;
+use Response;
 use Session;
 
 class CaptchaChallenge implements Htmlable
@@ -33,7 +34,7 @@ class CaptchaChallenge implements Htmlable
      *
      * @var string
      */
-    protected $profile;
+    protected $profile = "default";
 
     /**
      * The session token.
@@ -52,24 +53,28 @@ class CaptchaChallenge implements Htmlable
     /**
      * Generate the captcha image.
      *
-     * @param  string  $profile  Optional. Captcha config profile. Defaults to "default".
+     * @param  string  Optional. The hash to restore if supplied.
      * @return Captcha
      */
-    public function __construct($profile = "default")
+    public function __construct($hash = null)
     {
-        if ($this->getProfile($profile) === false) {
-            throw new InvalidArgumentException("Profile supplied does not exist");
-            return false;
-        }
-
-        $this->profile = $profile;
         $this->session = Session::getId();
-        $hash = $this->restore();
 
-        if (!$hash) {
-            $captcha = $this->createCaptcha();
-            $hash = $captcha['hash'];
-            $solution = $captcha['solution'];
+        if (is_null($hash)) {
+            $hash = $this->restoreSession();
+
+            if (!$hash) {
+                $captcha = $this->createCaptcha();
+            }
+        }
+        else {
+            $this->hash = $hash;
+            $captcha = $this->restoreHash();
+
+            if (!$captcha || !is_array($captcha)) {
+                throw new InvalidArgumentException("Restoration from hash failed.");
+                return $this;
+            }
         }
 
         // restore from session
@@ -82,58 +87,57 @@ class CaptchaChallenge implements Htmlable
         //    $this->model = $this->createCaptcha($profile);
         //}
 
-        $this->captcha = $captcha;
-        $this->hash = $hash;
-        $this->solution = $solution;
-
         return $this;
     }
 
     public function createCaptcha()
     {
+        // Generate our answer from the charset and length config.
+        $timestamp = Carbon::now();
+        $this->solution = $this->createSolution();
+        $this->hash = hash('sha256', implode("-", [
+            Config::get('app.key'),
+            Request::ip(),
+            $this->session,
+            $this->solution,
+            $timestamp,
+        ]));
+
+        //$captcha = new Captcha([
+        //    'client_ip'         => CaptchaModel::escapeInet(),
+        //    'client_session_id' => CaptchaModel::escapeBinary(hex2bin(Session::getId())),
+        //    'solution'          => $solution,
+        //    'profile'           => $this->profile,
+        //]);
+        //
+        //$captcha->hash = CaptchaModel::escapeBinary(hex2bin(sha1(implode("-", [
+        //    Config::get('app.key'),
+        //    Request::ip(),
+        //    Session::getId(),
+        //    $solution,
+        //    $captcha->freshTimestamp()
+        //]))));
+        //
+        //$captcha->save();
+        //
+        //return $captcha;
+
+        $this->captcha = [
+            'hash' => $this->hash,
+            'created_at' => $timestamp,
+            'expires_at' => $timestamp->addMinutes($this->getExpireTime()),
+            'solution' => $this->solution,
+        ];
+
         $rememberTimer   = $this->getExpireTime();
-        $rememberKey     = "laravel-captcha.captcha.{$this->hash}";
         $rememberClosure = function () {
-            // Generate our answer from the charset and length config.
-            $solution = $this->createSolution();
-            $timestamp = Carbon::now();
-
-            //$captcha = new Captcha([
-            //    'client_ip'         => CaptchaModel::escapeInet(),
-            //    'client_session_id' => CaptchaModel::escapeBinary(hex2bin(Session::getId())),
-            //    'solution'          => $solution,
-            //    'profile'           => $this->profile,
-            //]);
-            //
-            //$captcha->hash = CaptchaModel::escapeBinary(hex2bin(sha1(implode("-", [
-            //    Config::get('app.key'),
-            //    Request::ip(),
-            //    Session::getId(),
-            //    $solution,
-            //    $captcha->freshTimestamp()
-            //]))));
-            //
-            //$captcha->save();
-            //
-            //return $captcha;
-
-            $hash = hash('sha256', implode("-", [
-                Config::get('app.key'),
-                Request::ip(),
-                $this->session,
-                $solution,
-                $timestamp,
-            ]));
-
-            return [
-                'hash' => $hash,
-                'created_at' => $timestamp,
-                'expires_at' => $timestamp->addMinutes($this->getExpireTime()),
-                'solution' => $solution,
-            ];
+            return $this->captcha;
         };
 
-        return Cache::remember($rememberKey, $rememberTimer, $rememberClosure);
+        Cache::remember("laravel-captcha.session.{$this->session}", $rememberTimer, $rememberClosure);
+        Cache::remember("laravel-captcha.captcha.{$this->hash}", $rememberTimer, $rememberClosure);
+
+        return $this->captcha;
     }
 
     /**
@@ -408,6 +412,18 @@ class CaptchaChallenge implements Htmlable
     }
 
     /**
+     * Returns the full profile configuration.
+     *
+     * @return array|bool  False if not found.
+     */
+    public function fetchProfile($profile)
+    {
+        $profile = Config::get("captcha.profiles.{$profile}");
+
+        return is_array($profile) ? $profile : false;
+    }
+
+    /**
      * Returns our character set.
      *
      * @return string  of individual characters
@@ -577,15 +593,11 @@ class CaptchaChallenge implements Htmlable
     }
 
     /**
-     * Returns the full profile configuration.
-     *
-     * @return array|bool  False if not found.
+     * @return string
      */
-    public function getProfile($profile)
+    public function getProfile()
     {
-        $profile = Config::get("captcha.profiles.{$profile}");
-
-        return is_array($profile) ? $profile : false;
+        return $this->profile;
     }
 
     /**
@@ -631,13 +643,18 @@ class CaptchaChallenge implements Htmlable
      */
     public function replace($hash = null)
     {
-        if ($this->model instanceof Captcha) {
-            $captcha = $this->model;
-        }
+        if ($this->captcha instanceof Captcha) {
+            $captcha = $this->captcha;
 
-        if ($captcha && $captcha->exists) {
-            $profile = $captcha->profile;
-            $captcha->forceDelete();
+            if ($captcha && $captcha->exists) {
+                $profile = $captcha->profile;
+                $captcha->forceDelete();
+            }
+        }
+        else {
+            Cache::forget("laravel-captcha.session.{$this->session}");
+            Cache::forget("laravel-captcha.captcha.{$this->hash}");
+            Cache::forget("laravel-captcha.captcha-image.{$this->hash}");
         }
 
         return $this->createCaptcha();
@@ -656,7 +673,7 @@ class CaptchaChallenge implements Htmlable
             'Cache-Control'       => "no-cache, no-store, must-revalidate",
             'Pragma'              => "no-cache",
             'Expires'             => 0,
-            'Last-Modified'       => gmdate(DATE_RFC1123, $this->created_at->timestamp),
+            'Last-Modified'       => gmdate(DATE_RFC1123, $this->captcha['created_at']->timestamp),
             'Content-Disposition' => "inline",
             'Content-Length'      => $responseSize,
             'Content-Type'        => "image/png",
@@ -666,14 +683,54 @@ class CaptchaChallenge implements Htmlable
         return Response::make($responseImage, 200, $responseHeaders);
     }
 
+    public function restoreCaptcha(array $captcha)
+    {
+        $this->captcha = $captcha;
+        $this->hash = $captcha['hash'];
+        $this->solution = $captcha['solution'];
+    }
+
+    /**
+     * Restores a captcha by hash directly.
+     *
+     * @return string
+     */
+    public function restoreHash()
+    {
+        $captcha = Cache::get("laravel-captcha.captcha.{$this->hash}");
+
+        if (!is_null($captcha)) {
+            $this->restoreCaptcha($captcha);
+        }
+
+        return $captcha;
+    }
+
     /**
      * Returns the captcha hash for this session.
      *
      * @return string
      */
-    public function restore()
+    public function restoreSession()
     {
-        return Cache::get("laravel-captcha.captcha.{$this->session}");
+        $captcha = Cache::get("laravel-captcha.captcha.{$this->session}");
+
+        if (!is_null($captcha)) {
+            $this->restoreCaptcha($captcha);
+        }
+
+        return $captcha;
+    }
+
+    public function setProfile($profile = "default")
+    {
+        if ($this->fetchProfile($profile) === false) {
+            throw new InvalidArgumentException("Profile supplied does not exist");
+            return false;
+        }
+
+        $this->profile = $profile;
+        return $this->profile;
     }
 
     /**

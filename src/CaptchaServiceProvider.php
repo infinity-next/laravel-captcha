@@ -4,11 +4,14 @@ namespace InfinityNext\LaravelCaptcha;
 
 use InfinityNext\LaravelCaptcha\Captcha;
 use InfinityNext\LaravelCaptcha\CaptchaTableCommand;
+use InfinityNext\LaravelCaptcha\CaptchaChallenge;
 use InfinityNext\LaravelCaptcha\CaptchaValidator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Factory;
 use Illuminate\Routing\Router;
 use Request;
+use Route;
+use InvalidArgumentException;
 
 class CaptchaServiceProvider extends ServiceProvider
 {
@@ -37,116 +40,28 @@ class CaptchaServiceProvider extends ServiceProvider
         $this->registerValidationRules($this->app['validator']);
 
         $this->app->singleton('captcha', function ($app) {
-            return new Captcha;
+            return new CaptchaChallenge;
         });
 
-        $router->pattern('sha1', '[0-9a-f]{5,40}');
-        $router->pattern('alphanumeric', '[0-9a-z]{1,32}');
-
-        $router->group(['middleware' => config('captcha.middleware', 'api')], function() use ($router)
-        {
-            /**
-             * Destroys an existing captcha and returns a new one.
-             *
-             * @return Response  A redirect
-             */
-            $router->get(config('captcha.route'). '/replace', function()
-            {
-                $captcha = Captcha::replace(Request::get('hash', null));
-
-                return redirect(config('captcha.route') . '/' . $captcha->profile . '/' . $captcha->getHash() . '.png');
-            });
-
-            /**
-             * Destroys an existing captcha and returns a new one using JSON.
-             *
-             * @return \Intervention\Image\ImageManager
-             */
-            $router->get(config('captcha.route') . '/replace.json', function()
-            {
-                return Captcha::replace(Request::get('hash', null));
-            });
-
-            /**
-             * Redirects the user to a default profile captcha.
-             *
-             * @return Response  A redirect
-             */
-            $router->get(config('captcha.route'), function()
-            {
-                $captcha = Captcha::findOrCreateCaptcha();
-
-                return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.png');
-            });
-
-            /**
-             * Redirects the user to a specific profile captcha.
-             *
-             * @param  string  $profile
-             * @return Response  A redirect
-             */
-            $router->get(config('captcha.route'). '/{alphanumeric}', function($profile)
-            {
-                $captcha = Captcha::findOrCreateCaptcha($profile);
-
-                return redirect(config('captcha.route') . '/' . $profile . '/' . $captcha->getHash() . '.png');
-            });
-
-            /**
-             * Returns a JSON response with a new captcha hash.
-             *
-             * @return \Intervention\Image\ImageManager
-             */
-            $router->get(config('captcha.route') . '.json', function()
-            {
-                return Captcha::findOrCreateCaptcha();
-            });
-
-            /**
-             * Returns a JSON response with a new captcha hash.
-             *
-             * @param  string  $profile
-             * @return response  Redirect
-             */
-            $router->get(config('captcha.route') . '/{alphanumeric}.json', function($profile)
-            {
-                return Captcha::findOrCreateCaptcha($profile);
-            });
-
-            /**
-             * Displays a default profile captcha.
-             *
-             * @param  string  $hash
-             * @return Response  Image with headers
-             */
-            $router->get(config('captcha.route') . '/{sha1}.png', function($sha1)
-            {
-                $captcha = Captcha::findWithHex($sha1);
-
-                if ($captcha instanceof Captcha) {
-                    return $captcha->getAsResponse();
-                }
-
+        $router->bind('captcha', function ($value) {
+            try {
+                $captcha = new CaptchaChallenge($value);
+            }
+            catch (InvalidArgumentException $e) {
                 return abort(404);
-            });
+            }
+            catch (\Exception $e) {
+                dd($e);
+            }
 
-            /**
-             * Displays a specific profile captcha.
-             *
-             * @param  string  $profile
-             * @param  string  $config
-             * @return Response  Image with headers
-             */
-            $router->get(config('captcha.route') . '/{alphanumeric}/{sha1}.png', function($profile, $sha1)
-            {
-                $captcha = Captcha::findWithHex($sha1);
+            return $captcha;
+        });
 
-                if ($captcha instanceof Captcha) {
-                    return $captcha->getAsResponse();
-                }
+        $router->pattern('captcha', '[A-Fa-f0-9]{64}');
+        $router->pattern('captchaProfile', '[0-9a-z]{1,32}');
 
-                return abort(404);
-            });
+        Route::group($this->routeConfiguration(), function () {
+            $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
         });
     }
 
@@ -162,6 +77,20 @@ class CaptchaServiceProvider extends ServiceProvider
         });
 
         $this->commands('command.captcha.table');
+    }
+
+    /**
+     * Get the Telescope route group configuration array.
+     *
+     * @return array
+     */
+    private function routeConfiguration()
+    {
+        return [
+            'namespace' => 'InfinityNext\LaravelCaptcha\Http\Controllers',
+            'prefix' => config('captcha.path', '/captcha'),
+            'middleware' => config('captcha.middleware', 'api'),
+        ];
     }
 
     /**
