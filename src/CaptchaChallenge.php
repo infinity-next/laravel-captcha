@@ -471,7 +471,7 @@ class CaptchaChallenge implements Htmlable
      */
     public function getExpireTime()
     {
-        return Config::get("captcha.expires_in");
+        return Config::get("captcha.expires_in") * 60;
     }
 
     /**
@@ -500,8 +500,8 @@ class CaptchaChallenge implements Htmlable
     public function getFontPath(array $font)
     {
         $paths = [
-            'fonts/',
-            //'vendor/infinity-next/laravel-captcha/fonts',
+            'fonts',
+            'vendor/infinity-next/laravel-captcha/fonts',
         ];
 
         foreach ($paths as $path) {
@@ -713,7 +713,7 @@ class CaptchaChallenge implements Htmlable
      */
     public function restoreSession()
     {
-        $captcha = Cache::get("laravel-captcha.captcha.{$this->session}");
+        $captcha = Cache::get("laravel-captcha.session.{$this->session}");
 
         if (!is_null($captcha)) {
             $this->restoreCaptcha($captcha);
@@ -742,9 +742,17 @@ class CaptchaChallenge implements Htmlable
     public function toHtml()
     {
         $html  = "";
-        $html .= "<img src=\"" . url(Config::get('captcha.route') . "/{$this->profile}/{$this->getHash()}.webp") . "\" class=\"captcha\" />";
+        $html .= "<img src=\"" . route('captcha.image', [ 'captcha' => $this->getHash() ]) . "\" class=\"captcha\" />";
         $html .= "<input type=\"hidden\" name=\"captcha_hash\" value=\"{$this->getHash()}\" />";
 
         return $html;
+    }
+
+    public function toJson()
+    {
+        return [
+            'hash_string' => $this->getHash(),
+            'expires_at' => $this->getExpireTime()
+        ];
     }
 }

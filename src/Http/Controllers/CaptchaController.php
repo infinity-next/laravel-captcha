@@ -24,7 +24,7 @@ class CaptchaController extends Controller
         $captcha = new CaptchaChallenge();
 
         if (Request::wantsJson()) {
-            return $captcha->getHash();
+            return $captcha->toJson();
         }
 
         return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.webp');
@@ -35,7 +35,7 @@ class CaptchaController extends Controller
         $captcha->replace();
 
         if (Request::wantsJson()) {
-            return $captcha->getHash();
+            return $captcha->toJson();
         }
 
         return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.webp');
