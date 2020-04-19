@@ -6,6 +6,7 @@ use InfinityNext\LaravelCaptcha\Captcha as CaptchaModel;
 use InfinityNext\LaravelCaptcha\Events\CaptchaWasAnswered;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Cache;
+use Event;
 use InvalidArgumentException;
 use Session;
 
@@ -100,7 +101,7 @@ class CaptchaAnswer
         }
 
         if (str_replace(" ", "", mb_strtolower($answer)) === mb_strtolower($this->solution)) {
-            event(new CaptchaWasAnswered($this));
+            Event::dispatch(new CaptchaWasAnswered($this));
             return $this->answered = true;
         }
 

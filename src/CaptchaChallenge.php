@@ -8,6 +8,7 @@ use InfinityNext\LaravelCaptcha\Events\CaptchaWasCreated;
 use Illuminate\Contracts\Support\Htmlable;
 use Cache;
 use Config;
+use Event;
 use InvalidArgumentException;
 use OutOfRangeException;
 use Request;
@@ -138,7 +139,7 @@ class CaptchaChallenge implements Htmlable
         Cache::remember("laravel-captcha.session.{$this->session}", $rememberTimer, $rememberClosure);
         Cache::remember("laravel-captcha.captcha.{$this->hash}", $rememberTimer, $rememberClosure);
 
-        event(new CaptchaWasCreated($this));
+        Event::dispatch(new CaptchaWasCreated($this));
         return $this->captcha;
     }
 

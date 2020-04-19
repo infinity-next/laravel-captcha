@@ -2,11 +2,10 @@
 
 namespace InfinityNext\LaravelCaptcha\Events;
 
-use App\Events\Event;
 use InfinityNext\LaravelCaptcha\CaptchaChallenge;
 use Illuminate\Queue\SerializesModels;
 
-class CaptchaWasCreated extends Event
+class CaptchaWasCreated
 {
     use SerializesModels;
 
