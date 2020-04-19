@@ -4,6 +4,7 @@ namespace InfinityNext\LaravelCaptcha;
 
 use Carbon\Carbon;
 use InfinityNext\LaravelCaptcha\Captcha as CaptchaModel;
+use InfinityNext\LaravelCaptcha\Events\CaptchaWasCreated;
 use Illuminate\Contracts\Support\Htmlable;
 use Cache;
 use Config;
@@ -137,6 +138,7 @@ class CaptchaChallenge implements Htmlable
         Cache::remember("laravel-captcha.session.{$this->session}", $rememberTimer, $rememberClosure);
         Cache::remember("laravel-captcha.captcha.{$this->hash}", $rememberTimer, $rememberClosure);
 
+        event(new CaptchaWasCreated($this));
         return $this->captcha;
     }
 
