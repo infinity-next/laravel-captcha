@@ -24,7 +24,7 @@ class CaptchaChallengeTest extends TestCase
         $tmp = tmpfile();
         fwrite($tmp, $challenge->createGdCaptchaImage());
 
-        $this->assertSame("image/webp", mime_content_type($tmp));
+        $this->assertSame("image/jpeg", mime_content_type($tmp));
 
         unlink(stream_get_meta_data($tmp)['uri']);
     }
@@ -40,7 +40,7 @@ class CaptchaChallengeTest extends TestCase
         $tmp = tmpfile();
         fwrite($tmp, Cache::get($token));
 
-        $this->assertSame("image/webp", mime_content_type($tmp));
+        $this->assertSame("image/jpeg", mime_content_type($tmp));
 
         unlink(stream_get_meta_data($tmp)['uri']);
     }
@@ -50,7 +50,7 @@ class CaptchaChallengeTest extends TestCase
         $challenge = new CaptchaChallenge;
         $html = $challenge->toHtml();
 
-        $this->assertTrue(strpos($html, $challenge->getHash() . ".webp") !== false);
+        $this->assertTrue(strpos($html, $challenge->getHash() . ".jpg") !== false);
     }
 
     public function testReplace()

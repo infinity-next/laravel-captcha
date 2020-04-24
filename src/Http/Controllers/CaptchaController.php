@@ -27,7 +27,7 @@ class CaptchaController extends Controller
             return $captcha->toJson();
         }
 
-        return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.webp');
+        return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.jpg');
     }
 
     public function replace(CaptchaChallenge $captcha)
@@ -38,7 +38,7 @@ class CaptchaController extends Controller
             return $captcha->toJson();
         }
 
-        return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.webp');
-        //return redirect(config('captcha.route') . '/' . $captcha->getProfile() . '/' . $captcha->getHash() . '.webp');
+        return redirect(config('captcha.route') . '/' . $captcha->getHash() . '.jpg');
+        //return redirect(config('captcha.route') . '/' . $captcha->getProfile() . '/' . $captcha->getHash() . '.jpg');
     }
 }

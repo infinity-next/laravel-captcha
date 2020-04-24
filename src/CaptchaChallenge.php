@@ -380,7 +380,7 @@ class CaptchaChallenge implements Htmlable
 
 
         ob_start();
-        imagewebp($imgFinal);
+        imagejpeg($imgFinal);
         $imageData = ob_get_contents();
         ob_end_clean();
 
@@ -679,8 +679,8 @@ class CaptchaChallenge implements Htmlable
             'Last-Modified'       => gmdate(DATE_RFC1123, $this->captcha['created_at']->timestamp),
             'Content-Disposition' => "inline",
             'Content-Length'      => $responseSize,
-            'Content-Type'        => "image/png",
-            'Filename'            => "{$this->hash}.webp",
+            'Content-Type'        => "image/jpeg",
+            'Filename'            => "{$this->hash}.jpg",
         ];
 
         return Response::make($responseImage, 200, $responseHeaders);
